@@ -2,41 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BlurFilter } from 'pixi.js';
 import { Stage, Container, Sprite, Text, useTick, Graphics } from '@pixi/react';
 import { useMemo } from 'react';
-
+import io from 'socket.io-client';
+const socket = io.connect("http://localhost:3001")
 export default function App() {
   const blurFilter = useMemo(() => new BlurFilter(4), []);
 
   const cameraRef = useRef(null);
 
+  // const socket = io('http://localhost:3001'); // Replace with your server URL
+
   return (
-    <Stage width={800} height={600}>
-      
-      <Bunny cameraRef={cameraRef} />
-      <Container x={400} y={270}>
-        <Text text="Hello World" anchor={{ x: 0.5, y: 0.5 }} filters={[blurFilter]} />
-      </Container>
+    <Stage width={window.innerWidth} height={window.innerHeight}>
+      <Bunny cameraRef={cameraRef} socket={socket} />
     </Stage>
   );
 }
 
-function GridBackground({x,y}) {
-  return (
-    <Graphics draw={(g) => {
-      g.clear();
-      g.lineStyle(1, 0xffffff, 0.2);
-      for (let i = 0; i < 800; i += 50) {
-        g.moveTo(i -(x%50), 0);
-        g.lineTo(i-(x%50), 600);
-      }
-      for (let j = 0; j < 600; j += 50) {
-        g.moveTo(0, j-(y%50));
-        g.lineTo(800, j-(y%50));
-      }
-    }} />
-  );
-}
-
-function Bunny({ cameraRef }) {
+function Bunny({ cameraRef, socket }) {
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
   const [velocityY, setVelocityY] = useState(0);
@@ -48,7 +30,6 @@ function Bunny({ cameraRef }) {
   const [dKey, setDKey] = useState(false);
   const [rotation, setRotation] = useState(0);
 
-  // custom ticker
   useTick((delta) => {
     setI(i + 0.05 * delta);
     if (wKey === true && sKey === false && aKey === false && dKey === false) {
@@ -84,32 +65,35 @@ function Bunny({ cameraRef }) {
     setY(y + velocityY * delta);
     setRotation(Math.sin(i) * Math.PI);
 
-    // Update the camera position to follow the bunny
     if (cameraRef.current) {
       cameraRef.current.position.set(-x + 400, -y + 270);
     }
   });
 
   useEffect(() => {
-    // Add event listeners for keyboard controls
     const handleKeyDown = (event) => {
       switch (event.key) {
         case 'w':
           setWKey(true);
+          socket.emit('movement', { key: 'w' });
           break;
         case 's':
           setSKey(true);
+          socket.emit('movement', { key: 's' });
           break;
         case 'a':
           setAKey(true);
+          socket.emit('movement', { key: 'a' });
           break;
         case 'd':
           setDKey(true);
+          socket.emit('movement', { key: 'd' });
           break;
         default:
           break;
       }
     };
+
     const handleKeyUp = (event) => {
       switch (event.key) {
         case 'w':
@@ -128,26 +112,55 @@ function Bunny({ cameraRef }) {
           break;
       }
     };
-    window.addEventListener('keyup', handleKeyUp);
 
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
 
-    // Remove the event listener when the component unmounts
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
   }, [x, y]);
 
+  useEffect(() => {
+    socket.on('serverMessage', (data) => {
+      console.log('Received message from the server:', data);
+    });
+
+    return () => {
+      socket.off('serverMessage');
+    };
+  }, [socket]);
+
   return (
     <>
-    <GridBackground x ={x} y={y}/>
-    <Sprite
-      image={'https://pixijs.io/pixi-react/img/bunny.png'}
-      x={300}
-      y={300}
-      anchor={{ x: 0.5, y: 0.5 }}
-      rotation={rotation}
-    />
+      <GridBackground x={x} y={y} />
+      <Sprite
+        image={'https://pixijs.io/pixi-react/img/bunny.png'}
+        x={300}
+        y={300}
+        anchor={{ x: 0.5, y: 0.5 }}
+        rotation={rotation}
+      />
     </>
+  );
+}
+
+function GridBackground({ x, y }) {
+  return (
+    <Graphics
+      draw={(g) => {
+        g.clear();
+        g.lineStyle(1, 0xffffff, 0.2);
+        for (let i = 0; i < window.innerWidth; i += 50) {
+          g.moveTo(i - (x % 50), 0);
+          g.lineTo(i - (x % 50), window.innerHeight);
+        }
+        for (let j = 0; j < window.innerHeight; j += 50) {
+          g.moveTo(0, j - (y % 50));
+          g.lineTo(window.innerWidth, j - (y % 50));
+        }
+      }}
+    />
   );
 }
