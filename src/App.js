@@ -3,22 +3,51 @@ import { BlurFilter } from 'pixi.js';
 import { Stage, Container, Sprite, Text, useTick, Graphics } from '@pixi/react';
 import { useMemo } from 'react';
 import io from 'socket.io-client';
-const socket = io.connect("http://localhost:3001")
+const socket = io('http://localhost:3001');
+
 export default function App() {
-  const blurFilter = useMemo(() => new BlurFilter(4), []);
+  const [gameState, setGameState] = useState({
+    t: Date.now(),
+    playerArray: []
+  });
 
-  const cameraRef = useRef(null);
+  useEffect(() => {
+    socket.on('gameState', (serverGameState) => {
+      setGameState(serverGameState);
+    });
 
-  // const socket = io('http://localhost:3001'); // Replace with your server URL
+    // Cleanup the socket listener when the component unmounts
+    return () => {
+      socket.off('gameState');
+    };
+  }, []);
 
   return (
     <Stage width={window.innerWidth} height={window.innerHeight}>
-      <Bunny cameraRef={cameraRef} socket={socket} />
+      <Player socket={socket} gameState={gameState} />
+      {/* {renderBunnies(gameState.playerArray)} */}
     </Stage>
   );
 }
 
-function Bunny({ cameraRef, socket }) {
+function renderBunnies(playerArray, cameraX, cameraY) {
+  return playerArray.map((player, index) => (
+    <Bunny key={index} x={player.x - cameraX} y={player.y -cameraY} />
+  ));
+}
+
+function Bunny({ x, y }) {
+  return (
+    <Sprite
+      image={'https://pixijs.io/pixi-react/img/bunny.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0.5, y: 0.5 }}
+    />
+  );
+}
+
+function Player({ socket, gameState }) {
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
   const [velocityY, setVelocityY] = useState(0);
@@ -65,9 +94,6 @@ function Bunny({ cameraRef, socket }) {
     setY(y + velocityY * delta);
     setRotation(Math.sin(i) * Math.PI);
 
-    if (cameraRef.current) {
-      cameraRef.current.position.set(-x + 400, -y + 270);
-    }
   });
 
   useEffect(() => {
@@ -142,6 +168,8 @@ function Bunny({ cameraRef, socket }) {
         anchor={{ x: 0.5, y: 0.5 }}
         rotation={rotation}
       />
+      {renderBunnies(gameState.playerArray, x, y)}
+
     </>
   );
 }

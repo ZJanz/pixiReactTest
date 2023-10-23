@@ -14,11 +14,36 @@ const io = new Server(server, {
     }
 });
 
-// Serve your React app or static files if needed
-// app.use(express.static('public'));
+let gameState = {
+  t : Date.now(),
+  playerArray: [{
+    x: 5,
+    y: 5,
+    direction: 1.3082443894581433,
+    id: "AhzgAtklgo2FJvwWAADO",
+    hp: 100
+  }],
+}
+
+function update(){
+  for(i=0; i<gameState.playerArray.length; i++){
+    //Need to omit ids from gamestate possibly
+    io.to(gameState.playerArray[i].id).emit("gameState", gameState)
+  }
+}
+
+gameState.interval = setInterval(update, 1000/60);
 
 io.on('connection', (socket) => {
   console.log('A user connected');
+  gameState.playerArray.push({
+    x: 0,
+    y: 0,
+    direction: 0,
+    id: socket.id,
+    hp: 100
+  })
+  console.log(gameState.playerArray)
 
   socket.on('movement', (data) => {
     console.log('Received movement key:', data.key);
