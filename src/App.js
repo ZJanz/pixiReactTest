@@ -1,95 +1,132 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BlurFilter } from 'pixi.js';
-import { Stage, Container, Sprite, Text, useTick  } from '@pixi/react';
-import { useMemo } from 'react'
+import { Stage, Container, Sprite, Text, useTick, Graphics } from '@pixi/react';
+import { useMemo } from 'react';
 
-let bunnyx = 400
-let bunnyy = 270
 export default function App() {
   const blurFilter = useMemo(() => new BlurFilter(4), []);
+
+  const cameraRef = useRef(null);
+
   return (
     <Stage width={800} height={600}>
-      <Bunny
-        />
+      
+      <Bunny cameraRef={cameraRef} />
       <Container x={400} y={270}>
-        <Text text="Hello World" anchor={{x:0.5, y:0.5}} filters={[blurFilter]} />
+        <Text text="Hello World" anchor={{ x: 0.5, y: 0.5 }} filters={[blurFilter]} />
       </Container>
     </Stage>
-
   );
 }
 
+function GridBackground({x,y}) {
+  return (
+    <Graphics draw={(g) => {
+      g.clear();
+      g.lineStyle(1, 0xffffff, 0.2);
+      for (let i = 0; i < 800; i += 50) {
+        g.moveTo(i -(x%50), 0);
+        g.lineTo(i-(x%50), 600);
+      }
+      for (let j = 0; j < 600; j += 50) {
+        g.moveTo(0, j-(y%50));
+        g.lineTo(800, j-(y%50));
+      }
+    }} />
+  );
+}
 
-
-function Bunny(){
-
+function Bunny({ cameraRef }) {
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
+  const [velocityY, setVelocityY] = useState(0);
+  const [velocityX, setVelocityX] = useState(0);
   const [i, setI] = useState(0);
   const [wKey, setWKey] = useState(false);
   const [aKey, setAKey] = useState(false);
   const [sKey, setSKey] = useState(false);
   const [dKey, setDKey] = useState(false);
-
-
   const [rotation, setRotation] = useState(0);
 
   // custom ticker
-  useTick(delta => {
-    setI(i+ 0.05 * delta);
-    if(wKey === true){
-      setY(y-5*delta);
+  useTick((delta) => {
+    setI(i + 0.05 * delta);
+    if (wKey === true && sKey === false && aKey === false && dKey === false) {
+      setVelocityY(velocityY - 1 * delta);
     }
-    if(sKey === true){
-      setY(y+5*delta);
+    if (sKey === true && wKey === false && aKey === false && dKey === false) {
+      setVelocityY(velocityY + 1 * delta);
     }
-    if(aKey === true){
-      setX(x-5*delta);
+    if (aKey === true && sKey === false && wKey === false && dKey === false) {
+      setVelocityX(velocityX - 1 * delta);
     }
-    if(dKey === true){
-      setX(x+5*delta);
+    if (dKey === true && sKey === false && aKey === false && wKey === false) {
+      setVelocityX(velocityX + 1 * delta);
     }
-    // setX(x+1*delta);
-    // setY(y+1*delta);
+    if (wKey === true && sKey === false && aKey === true && dKey === false) {
+      setVelocityY(velocityY - 0.5 * delta);
+      setVelocityX(velocityX - 0.5 * delta);
+    }
+    if (wKey === true && sKey === false && aKey === false && dKey === true) {
+      setVelocityY(velocityY - 0.5 * delta);
+      setVelocityX(velocityX + 0.5 * delta);
+    }
+    if (sKey === true && wKey === false && aKey === true && dKey === false) {
+      setVelocityY(velocityY + 0.5 * delta);
+      setVelocityX(velocityX - 0.5 * delta);
+    }
+    if (sKey === true && wKey === false && aKey === false && dKey === true) {
+      setVelocityY(velocityY + 0.5 * delta);
+      setVelocityX(velocityX + 0.5 * delta);
+    }
+
+    setX(x + velocityX * delta);
+    setY(y + velocityY * delta);
     setRotation(Math.sin(i) * Math.PI);
+
+    // Update the camera position to follow the bunny
+    if (cameraRef.current) {
+      cameraRef.current.position.set(-x + 400, -y + 270);
+    }
   });
+
   useEffect(() => {
     // Add event listeners for keyboard controls
-    const handleKeyDown = event => {
+    const handleKeyDown = (event) => {
       switch (event.key) {
         case 'w':
-          setWKey(true)
+          setWKey(true);
           break;
         case 's':
-          setSKey(true)
+          setSKey(true);
           break;
         case 'a':
-          setAKey(true)
+          setAKey(true);
           break;
         case 'd':
-          setDKey(true)
+          setDKey(true);
           break;
         default:
           break;
       }
     };
-      const handleKeyUp = event => {
-        switch (event.key) {
-          case 'w':
-            setWKey(false)
-            break;
-          case 's':
-            setSKey(false)
-            break;
-          case 'a':
-            setAKey(false)
-            break;
-          case 'd':
-            setDKey(false)
-            break;
-          default:
-            break;
-        }
+    const handleKeyUp = (event) => {
+      switch (event.key) {
+        case 'w':
+          setWKey(false);
+          break;
+        case 's':
+          setSKey(false);
+          break;
+        case 'a':
+          setAKey(false);
+          break;
+        case 'd':
+          setDKey(false);
+          break;
+        default:
+          break;
+      }
     };
     window.addEventListener('keyup', handleKeyUp);
 
@@ -101,16 +138,16 @@ function Bunny(){
     };
   }, [x, y]);
 
-
-  return(<Sprite 
-    image={"https://pixijs.io/pixi-react/img/bunny.png"} 
-    x={x} 
-    y={y} 
-    anchor={{x:0.5, y:0.5}}
-    rotation={rotation}
-    />)
+  return (
+    <>
+    <GridBackground x ={x} y={y}/>
+    <Sprite
+      image={'https://pixijs.io/pixi-react/img/bunny.png'}
+      x={300}
+      y={300}
+      anchor={{ x: 0.5, y: 0.5 }}
+      rotation={rotation}
+    />
+    </>
+  );
 }
-
-
-
-
