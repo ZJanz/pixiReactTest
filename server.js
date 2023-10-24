@@ -23,7 +23,7 @@ let gameState = {
     id: "AhzgAtklgo2FJvwWAADO",
     hp: 100
   }],
-    playerIDToIndex:new Map();
+    playerIDToIndex:new Map()
 }
 gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0)
 function update(){
