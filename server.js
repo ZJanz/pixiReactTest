@@ -61,7 +61,7 @@ function update(){
     }
     if (player.moveDown === true && player.moveForward === false && player.moveLeft === false && player.moveRight === true) {
       player.velocityY = (player.velocityY + 0.5 * delta);
-      player.velocityX = (player.velocityX + 0.5 * delta);
+      player.velocityX = (velocityX + 0.5 * delta);
     }
     //Need to omit ids from gamestate possibly
     io.to(gameState.playerArray[i].id).emit("gameState", gameState)
