@@ -30,6 +30,35 @@ let gameState = {
 gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0)
 function update(){
   for(i=0; i<gameState.playerArray.length; i++){
+    let player = gameState.playerArray[i]
+    if (player.moveForward === true && player.moveDown === false && player.moveLeft === false && player.moveRight === false) {
+      setVelocityY(velocityY - 1 * delta);
+    }
+    if (player.moveDown === true && player.moveForward === false && player.moveLeft === false && player.moveRight === false) {
+      setVelocityY(velocityY + 1 * delta);
+    }
+    if (player.moveLeft === true && player.moveDown === false && player.moveForward === false && player.moveRight === false) {
+      setVelocityX(velocityX - 1 * delta);
+    }
+    if (player.moveRight === true && player.moveDown === false && player.moveLeft === false && player.moveForward === false) {
+      setVelocityX(velocityX + 1 * delta);
+    }
+    if (player.moveForward === true && player.moveDown === false && player.moveLeft === true && player.moveRight === false) {
+      setVelocityY(velocityY - 0.5 * delta);
+      setVelocityX(velocityX - 0.5 * delta);
+    }
+    if (player.moveForward === true && player.moveDown === false && player.moveLeft === false && player.moveRight === true) {
+      setVelocityY(velocityY - 0.5 * delta);
+      setVelocityX(velocityX + 0.5 * delta);
+    }
+    if (player.moveDown === true && player.moveForward === false && player.moveLeft === true && player.moveRight === false) {
+      setVelocityY(velocityY + 0.5 * delta);
+      setVelocityX(velocityX - 0.5 * delta);
+    }
+    if (player.moveDown === true && player.moveForward === false && player.moveLeft === false && player.moveRight === true) {
+      setVelocityY(velocityY + 0.5 * delta);
+      setVelocityX(velocityX + 0.5 * delta);
+    }
     //Need to omit ids from gamestate possibly
     io.to(gameState.playerArray[i].id).emit("gameState", gameState)
   }
