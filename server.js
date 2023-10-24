@@ -19,6 +19,8 @@ let gameState = {
   playerArray: [{
     x: 5,
     y: 5,
+    velocityX:0,
+    velocityY:0,
     direction: 1.3082443894581433,
     id: "AhzgAtklgo2FJvwWAADO",
     hp: 100
@@ -40,14 +42,37 @@ io.on('connection', (socket) => {
   gameState.playerArray.push({
     x: 0,
     y: 0,
+    velocityX: 0,
+    velocityY: 0,
+    moveRight: false,
+    moveLeft: false,
+    moveUp: false,
+    moveDown: false,
+
     direction: 0,
     id: socket.id,
     hp: 100
   })
+  const index = gameState.playerArray.length-1
+  gameState.playerIDToIndex.set(`${gameState.playerArray[index].id}`, index)
+
   console.log(gameState.playerArray)
 
   socket.on('movement', (data) => {
     console.log('Received movement key:', data.key);
+    const playerArrayPosition = gameState.playerIDToIndex[socket.id];
+    if(data.key === 'w'){
+      gameState.playerArray[playerArrayPosition].moveUp = true
+    }
+    if(data.key === 's'){
+      gameState.playerArray[playerArrayPosition].moveDown = true
+    }
+    if(data.key === 'a'){
+      gameState.playerArray[playerArrayPosition].moveLeft = true
+    }
+    if(data.key === 'd'){
+      gameState.playerArray[playerArrayPosition].moveRight = true
+    }
     // You can perform any necessary server-side logic here based on the received key.
   });
 
