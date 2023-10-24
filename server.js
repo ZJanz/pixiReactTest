@@ -23,8 +23,9 @@ let gameState = {
     id: "AhzgAtklgo2FJvwWAADO",
     hp: 100
   }],
+    playerIDToIndex:new Map();
 }
-
+gameState.playerIDToIndex(`gameState.playerArray[0].id`, 0)
 function update(){
   for(i=0; i<gameState.playerArray.length; i++){
     //Need to omit ids from gamestate possibly
