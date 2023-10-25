@@ -31,7 +31,7 @@ gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0)
 function update(){
   const lastTimestamp = gameState.t
   gameState.t = Date.now()
-  const delta = (gameState.t - lastTimestamp) / 1000;
+  const delta = (gameState.t - lastTimestamp) /60;
 
   for(i=0; i<gameState.playerArray.length; i++){
     let player = gameState.playerArray[i]
@@ -61,11 +61,11 @@ function update(){
     }
     if (player.moveDown === true && player.moveForward === false && player.moveLeft === false && player.moveRight === true) {
       player.velocityY = (player.velocityY + 0.5 * delta);
-      player.velocityX = (velocityX + 0.5 * delta);
+      player.velocityX = (player.velocityX + 0.5 * delta);
     }
 
-    player.x(x + player.velocityX * delta);
-    player.y(y + player.velocityY * delta);
+    player.x +=(player.velocityX * delta);
+    player.y += (player.velocityY * delta);
     
     //Need to omit ids from gamestate possibly
     io.to(gameState.playerArray[i].id).emit("gameState", gameState)
@@ -83,7 +83,7 @@ io.on('connection', (socket) => {
     velocityY: 0,
     moveRight: false,
     moveLeft: false,
-    moveUp: false,
+    moveForward: false,
     moveDown: false,
 
     direction: 0,
@@ -97,9 +97,11 @@ io.on('connection', (socket) => {
 
   socket.on('movement', (data) => {
     console.log('Received movement key:', data.key);
-    const playerArrayPosition = gameState.playerIDToIndex[socket.id];
+    const playerArrayPosition = gameState.playerIDToIndex.get(socket.id);
+    console.log(playerArrayPosition)
+    if(playerArrayPosition === undefined){return}
     if(data.key === 'w'){
-      gameState.playerArray[playerArrayPosition].moveUp = true
+      gameState.playerArray[playerArrayPosition].moveForward = true
     }
     if(data.key === 's'){
       gameState.playerArray[playerArrayPosition].moveDown = true
