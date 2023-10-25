@@ -6,6 +6,7 @@ import io from 'socket.io-client';
 const socket = io('http://localhost:3001');
 
 export default function App() {
+  const [indexInPlayerArray, setIndexInPlayerArray] = useState(0);
   const [gameState, setGameState] = useState({
     t: Date.now(),
     playerArray: []
@@ -15,6 +16,9 @@ export default function App() {
     socket.on('gameState', (serverGameState) => {
       setGameState(serverGameState);
     });
+  socket.on("indexInPlayerArray", (index)=>{
+    setIndexInPlayerArray(index)
+  })
 
     // Cleanup the socket listener when the component unmounts
     return () => {
@@ -24,7 +28,7 @@ export default function App() {
 
   return (
     <Stage width={window.innerWidth} height={window.innerHeight}>
-      <Player socket={socket} gameState={gameState} />
+      <Camera socket={socket} gameState={gameState} indexOfPlayer={indexInPlayerArray}/>
       {/* {renderBunnies(gameState.playerArray)} */}
     </Stage>
   );
@@ -47,7 +51,8 @@ function Bunny({ x, y }) {
   );
 }
 
-function Player({ socket, gameState }) {
+function Camera({ socket, gameState, indexOfPlayer }) {
+
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
   const [velocityY, setVelocityY] = useState(0);
@@ -60,38 +65,42 @@ function Player({ socket, gameState }) {
   const [rotation, setRotation] = useState(0);
 
   useTick((delta) => {
-    setI(i + 0.05 * delta);
-    if (wKey === true && sKey === false && aKey === false && dKey === false) {
-      setVelocityY(velocityY - 1 * delta);
-    }
-    if (sKey === true && wKey === false && aKey === false && dKey === false) {
-      setVelocityY(velocityY + 1 * delta);
-    }
-    if (aKey === true && sKey === false && wKey === false && dKey === false) {
-      setVelocityX(velocityX - 1 * delta);
-    }
-    if (dKey === true && sKey === false && aKey === false && wKey === false) {
-      setVelocityX(velocityX + 1 * delta);
-    }
-    if (wKey === true && sKey === false && aKey === true && dKey === false) {
-      setVelocityY(velocityY - 0.5 * delta);
-      setVelocityX(velocityX - 0.5 * delta);
-    }
-    if (wKey === true && sKey === false && aKey === false && dKey === true) {
-      setVelocityY(velocityY - 0.5 * delta);
-      setVelocityX(velocityX + 0.5 * delta);
-    }
-    if (sKey === true && wKey === false && aKey === true && dKey === false) {
-      setVelocityY(velocityY + 0.5 * delta);
-      setVelocityX(velocityX - 0.5 * delta);
-    }
-    if (sKey === true && wKey === false && aKey === false && dKey === true) {
-      setVelocityY(velocityY + 0.5 * delta);
-      setVelocityX(velocityX + 0.5 * delta);
-    }
+    // setI(i + 0.05 * delta);
+    // if (wKey === true && sKey === false && aKey === false && dKey === false) {
+    //   setVelocityY(velocityY - 1 * delta);
+    // }
+    // if (sKey === true && wKey === false && aKey === false && dKey === false) {
+    //   setVelocityY(velocityY + 1 * delta);
+    // }
+    // if (aKey === true && sKey === false && wKey === false && dKey === false) {
+    //   setVelocityX(velocityX - 1 * delta);
+    // }
+    // if (dKey === true && sKey === false && aKey === false && wKey === false) {
+    //   setVelocityX(velocityX + 1 * delta);
+    // }
+    // if (wKey === true && sKey === false && aKey === true && dKey === false) {
+    //   setVelocityY(velocityY - 0.5 * delta);
+    //   setVelocityX(velocityX - 0.5 * delta);
+    // }
+    // if (wKey === true && sKey === false && aKey === false && dKey === true) {
+    //   setVelocityY(velocityY - 0.5 * delta);
+    //   setVelocityX(velocityX + 0.5 * delta);
+    // }
+    // if (sKey === true && wKey === false && aKey === true && dKey === false) {
+    //   setVelocityY(velocityY + 0.5 * delta);
+    //   setVelocityX(velocityX - 0.5 * delta);
+    // }
+    // if (sKey === true && wKey === false && aKey === false && dKey === true) {
+    //   setVelocityY(velocityY + 0.5 * delta);
+    //   setVelocityX(velocityX + 0.5 * delta);
+    // }
 
-    setX(x + velocityX * delta);
-    setY(y + velocityY * delta);
+    // setX(x + velocityX * delta);
+    // setY(y + velocityY * delta);
+    if(gameState.playerArray[indexOfPlayer] === undefined){return}
+    setX(gameState.playerArray[indexOfPlayer].x - window.innerWidth/2)
+    setY(gameState.playerArray[indexOfPlayer].y - window.innerHeight/2)
+
     setRotation(Math.sin(i) * Math.PI);
 
   });
@@ -124,15 +133,19 @@ function Player({ socket, gameState }) {
       switch (event.key) {
         case 'w':
           setWKey(false);
+          socket.emit('stopMovement', { key: 'w' });
           break;
         case 's':
           setSKey(false);
+          socket.emit('stopMovement', { key: 's' });
           break;
         case 'a':
           setAKey(false);
+          socket.emit('stopMovement', { key: 'a' });
           break;
         case 'd':
           setDKey(false);
+          socket.emit('stopMovement', { key: 'd' });
           break;
         default:
           break;
