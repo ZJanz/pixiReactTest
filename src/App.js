@@ -11,20 +11,32 @@ export default function App() {
     t: Date.now(),
     playerArray: []
   });
-
+  const [serverState, setServerState] = useState(gameState)
+  const [history, setHistory] = useState([gameState])
   useEffect(() => {
     socket.on('gameState', (serverGameState) => {
-      setGameState(serverGameState);
+      setServerState(serverGameState);
     });
-  socket.on("indexInPlayerArray", (index)=>{
-    setIndexInPlayerArray(index)
-  })
-
-    // Cleanup the socket listener when the component unmounts
+  
+    socket.on("indexInPlayerArray", (index) => {
+      setIndexInPlayerArray(index);
+    });
+  
+    // Cleanup the socket listeners when the component unmounts
     return () => {
       socket.off('gameState');
     };
   }, []);
+  
+  useEffect(() => {
+    // Update history when serverState changes
+    setHistory((prevHistory) => [...prevHistory, serverState]);
+  }, [serverState]);
+  
+  useEffect(() => {
+    // Update gameState based on the last element of history
+    setGameState(history[history.length - 1]);
+  }, [history]);
 
   return (
     <Stage width={window.innerWidth} height={window.innerHeight}>
