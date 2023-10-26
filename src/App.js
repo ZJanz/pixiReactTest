@@ -6,6 +6,48 @@ import io from 'socket.io-client';
 const socket = io('http://localhost:3001');
 
 export default function App() {
+
+  //MOVE THIS ALL TO CAMERA
+  
+
+  return (
+    <Stage width={window.innerWidth} height={window.innerHeight}>
+      <Camera />
+      {/* {renderBunnies(gameState.playerArray)} */}
+    </Stage>
+  );
+}
+
+function renderBunnies(playerArray, cameraX, cameraY) {
+  return playerArray.map((player, index) => (
+    <Bunny key={index} x={player.x - cameraX} y={player.y -cameraY} />
+  ));
+}
+
+function Bunny({ x, y }) {
+  return (
+    <Sprite
+      image={'https://pixijs.io/pixi-react/img/bunny.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0.5, y: 0.5 }}
+    />
+  );
+}
+
+function Camera() {
+
+  const [x, setX] = useState(0);
+  const [y, setY] = useState(0);
+  const [velocityY, setVelocityY] = useState(0);
+  const [velocityX, setVelocityX] = useState(0);
+  const [i, setI] = useState(0);
+  const [wKey, setWKey] = useState(false);
+  const [aKey, setAKey] = useState(false);
+  const [sKey, setSKey] = useState(false);
+  const [dKey, setDKey] = useState(false);
+  const [rotation, setRotation] = useState(0);
+
   const [indexInPlayerArray, setIndexInPlayerArray] = useState(0);
   const [gameState, setGameState] = useState({
     t: Date.now(),
@@ -33,87 +75,22 @@ export default function App() {
     setHistory((prevHistory) => [...prevHistory, serverState]);
   }, [serverState]);
   
+  // useEffect(() => {
+  //   // Update gameState based on the last element of history
+  //   setGameState(history[history.length - 1]);
+  // }, [history]);
   useEffect(() => {
-    // Update gameState based on the last element of history
-    setGameState(history[history.length - 1]);
-  }, [history]);
-
-  return (
-    <Stage width={window.innerWidth} height={window.innerHeight}>
-      <Camera socket={socket} gameState={gameState} indexOfPlayer={indexInPlayerArray}/>
-      {/* {renderBunnies(gameState.playerArray)} */}
-    </Stage>
-  );
-}
-
-function renderBunnies(playerArray, cameraX, cameraY) {
-  return playerArray.map((player, index) => (
-    <Bunny key={index} x={player.x - cameraX} y={player.y -cameraY} />
-  ));
-}
-
-function Bunny({ x, y }) {
-  return (
-    <Sprite
-      image={'https://pixijs.io/pixi-react/img/bunny.png'}
-      x={x}
-      y={y}
-      anchor={{ x: 0.5, y: 0.5 }}
-    />
-  );
-}
-
-function Camera({ socket, gameState, indexOfPlayer }) {
-
-  const [x, setX] = useState(0);
-  const [y, setY] = useState(0);
-  const [velocityY, setVelocityY] = useState(0);
-  const [velocityX, setVelocityX] = useState(0);
-  const [i, setI] = useState(0);
-  const [wKey, setWKey] = useState(false);
-  const [aKey, setAKey] = useState(false);
-  const [sKey, setSKey] = useState(false);
-  const [dKey, setDKey] = useState(false);
-  const [rotation, setRotation] = useState(0);
+    // Update history when serverState changes
+    if(gameState.playerArray[indexInPlayerArray] === undefined){return}
+    setX(gameState.playerArray[indexInPlayerArray].x - window.innerWidth/2)
+    setY(gameState.playerArray[indexInPlayerArray].y - window.innerHeight/2)
+  }, [gameState]);
 
   useTick((delta) => {
-    // setI(i + 0.05 * delta);
-    // if (wKey === true && sKey === false && aKey === false && dKey === false) {
-    //   setVelocityY(velocityY - 1 * delta);
-    // }
-    // if (sKey === true && wKey === false && aKey === false && dKey === false) {
-    //   setVelocityY(velocityY + 1 * delta);
-    // }
-    // if (aKey === true && sKey === false && wKey === false && dKey === false) {
-    //   setVelocityX(velocityX - 1 * delta);
-    // }
-    // if (dKey === true && sKey === false && aKey === false && wKey === false) {
-    //   setVelocityX(velocityX + 1 * delta);
-    // }
-    // if (wKey === true && sKey === false && aKey === true && dKey === false) {
-    //   setVelocityY(velocityY - 0.5 * delta);
-    //   setVelocityX(velocityX - 0.5 * delta);
-    // }
-    // if (wKey === true && sKey === false && aKey === false && dKey === true) {
-    //   setVelocityY(velocityY - 0.5 * delta);
-    //   setVelocityX(velocityX + 0.5 * delta);
-    // }
-    // if (sKey === true && wKey === false && aKey === true && dKey === false) {
-    //   setVelocityY(velocityY + 0.5 * delta);
-    //   setVelocityX(velocityX - 0.5 * delta);
-    // }
-    // if (sKey === true && wKey === false && aKey === false && dKey === true) {
-    //   setVelocityY(velocityY + 0.5 * delta);
-    //   setVelocityX(velocityX + 0.5 * delta);
-    // }
+    
+      setGameState(history[history.length - 1]);
 
-    // setX(x + velocityX * delta);
-    // setY(y + velocityY * delta);
-    if(gameState.playerArray[indexOfPlayer] === undefined){return}
-    setX(gameState.playerArray[indexOfPlayer].x - window.innerWidth/2)
-    setY(gameState.playerArray[indexOfPlayer].y - window.innerHeight/2)
-
-    setRotation(Math.sin(i) * Math.PI);
+    // setRotation(Math.sin(i) * Math.PI);
 
   });
 
