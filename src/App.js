@@ -93,6 +93,7 @@ function Camera() {
         if (history[i].t <= targetTimestamp) {
           closestState = history[i];
         } else {
+          setHistory(history.slice(i));
           break;
         }
       }
