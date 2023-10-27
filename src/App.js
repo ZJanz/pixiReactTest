@@ -75,10 +75,6 @@ function Camera() {
     setHistory((prevHistory) => [...prevHistory, serverState]);
   }, [serverState]);
   
-  // useEffect(() => {
-  //   // Update gameState based on the last element of history
-  //   setGameState(history[history.length - 1]);
-  // }, [history]);
   useEffect(() => {
     // Update history when serverState changes
     if(gameState.playerArray[indexInPlayerArray] === undefined){return}
@@ -88,7 +84,21 @@ function Camera() {
 
   useTick((delta) => {
     
-      setGameState(history[history.length - 1]);
+      // Calculate the target timestamp (current time - desired delay)
+      const targetTimestamp = Date.now() - 100;
+
+      // Find the state from the history that is closest to the target timestamp
+      let closestState = history[0];
+      for (let i = 0; i < history.length; i++) {
+        if (history[i].t <= targetTimestamp) {
+          closestState = history[i];
+        } else {
+          break;
+        }
+      }
+
+      // Set the game state to the closest state
+      setGameState(closestState);
 
     // setRotation(Math.sin(i) * Math.PI);
 
