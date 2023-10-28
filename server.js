@@ -35,11 +35,11 @@ let gameState = {
     velocityX:0,
     velocityY:0,
     shipRooms:[
-      [0,0,0,0,0],
-      [0,3,1,0,0],
+      [0,1,1,1,0],
+      [0,3,1,1,0],
       [0,3,1,1,2],
-      [0,3,1,0,0],
-      [0,0,0,0,0]
+      [0,3,1,1,0],
+      [0,1,1,1,0]
   ]
   }]
 }
@@ -100,6 +100,30 @@ function update(){
     //Need to omit ids from gamestate possibly
     io.to(gameState.playerArray[i].id).emit("gameState", gameState)
   }
+
+  for(i=0; i<gameState.shipArray.length; i++){
+    let ship = gameState.shipArray[i]
+    if(ship.rotateLeft === true){
+      ship.rotationVelocity = (ship.rotationVelocity - 0.01*delta)
+    }
+    if(ship.rotateRight === true){
+      ship.rotationVelocity = (ship.rotationVelocity + 0.01*delta)
+    }
+    if (ship.moveForward === true ) {
+      // player.velocityY = (player.velocityY - 1 * delta);
+
+      const angleInRadians = ship.rotation; 
+      ship.velocityX += Math.cos(angleInRadians) * 1*delta;
+      ship.velocityY += Math.sin(angleInRadians) * 1*delta;
+    }
+    
+
+    ship.rotation += (ship.rotationVelocity * delta)
+
+    ship.x +=(ship.velocityX * delta);
+    ship.y += (ship.velocityY * delta);
+    
+  }
 }
 
 gameState.interval = setInterval(update, 1000/60);
@@ -107,8 +131,9 @@ gameState.interval = setInterval(update, 1000/60);
 io.on('connection', (socket) => {
   console.log('A user connected');
   gameState.playerArray.push({
-    x: 0,
-    y: 0,
+    x: 64*3,
+    y: 64*3,
+    mode: 1,
     velocityX: 0,
     velocityY: 0,
     moveRight: false,
@@ -117,10 +142,31 @@ io.on('connection', (socket) => {
     moveDown: false,
     rotationVelocity: 0,
     rotation: 0,
-
+    insideShip:gameState.shipArray.length,
+    controllingShip:gameState.shipArray.length,
     direction: 0,
     id: socket.id,
     hp: 100
+  })
+  gameState.shipArray.push({
+      id: gameState.shipArray.length,
+      alive: true,
+      controledBy: gameState.playerArray,
+      rotation:0,
+      x: 0,
+      y: 0,
+      velocityX:0,
+      velocityY:0,
+      moveForward: false,
+      rotationVelocity: 0,
+      rotation: 0,
+      shipRooms:[
+        [0,0,0,0,0],
+        [0,0,1,0,0],
+        [3,1,1,1,2],
+        [0,0,1,0,0],
+        [0,0,0,0,0]
+    ]
   })
   const index = gameState.playerArray.length-1
   gameState.playerIDToIndex.set(`${gameState.playerArray[index].id}`, index)
@@ -131,25 +177,34 @@ io.on('connection', (socket) => {
   socket.on('movement', (data) => {
     console.log('Received movement key:', data.key);
     const playerArrayPosition = gameState.playerIDToIndex.get(socket.id);
-    console.log(playerArrayPosition)
     if(playerArrayPosition === undefined){return}
-    if(data.key === 'w'){
+    const ship = gameState.playerArray[playerArrayPosition].insideShip
+    if(data.key === 'w' && gameState.playerArray[playerArrayPosition].mode === 0){
       gameState.playerArray[playerArrayPosition].moveForward = true
     }
-    if(data.key === 's'){
+    if(data.key === 's' && gameState.playerArray[playerArrayPosition].mode === 0){
       gameState.playerArray[playerArrayPosition].moveDown = true
     }
-    if(data.key === 'a'){
+    if(data.key === 'a' && gameState.playerArray[playerArrayPosition].mode === 0){
       gameState.playerArray[playerArrayPosition].moveLeft = true
     }
-    if(data.key === 'd'){
+    if(data.key === 'd' && gameState.playerArray[playerArrayPosition].mode === 0){
       gameState.playerArray[playerArrayPosition].moveRight = true
     }
-    if(data.key === 'q'){
+    if(data.key === 'q' && gameState.playerArray[playerArrayPosition].mode === 0){
       gameState.playerArray[playerArrayPosition].rotateLeft = true
     }
-    if(data.key === 'e'){
+    if(data.key === 'e' && gameState.playerArray[playerArrayPosition].mode === 0){
       gameState.playerArray[playerArrayPosition].rotateRight = true
+    }
+    if(data.key === 'w' && gameState.playerArray[playerArrayPosition].mode === 1){
+      gameState.shipArray[ship].moveForward = true
+    }
+    if(data.key === 'q' && gameState.playerArray[playerArrayPosition].mode === 1){
+      gameState.shipArray[ship].rotateLeft = true
+    }
+    if(data.key === 'e' && gameState.playerArray[playerArrayPosition].mode === 1){
+      gameState.shipArray[ship].rotateRight = true
     }
     // You can perform any necessary server-side logic here based on the received key.
   });
@@ -159,6 +214,7 @@ io.on('connection', (socket) => {
     const playerArrayPosition = gameState.playerIDToIndex.get(socket.id);
     console.log(playerArrayPosition)
     if(playerArrayPosition === undefined){return}
+    const ship = gameState.playerArray[playerArrayPosition].insideShip
     if(data.key === 'w'){
       gameState.playerArray[playerArrayPosition].moveForward = false
     }
@@ -176,6 +232,15 @@ io.on('connection', (socket) => {
     }
     if(data.key === 'e'){
       gameState.playerArray[playerArrayPosition].rotateRight = false
+    }
+    if(data.key === 'w' && gameState.playerArray[playerArrayPosition].mode === 1){
+      gameState.shipArray[ship].moveForward = false
+    }
+    if(data.key === 'q' && gameState.playerArray[playerArrayPosition].mode === 1){
+      gameState.shipArray[ship].rotateLeft = false
+    }
+    if(data.key === 'e' && gameState.playerArray[playerArrayPosition].mode === 1){
+      gameState.shipArray[ship].rotateRight = false
     }
     // You can perform any necessary server-side logic here based on the received key.
   });
