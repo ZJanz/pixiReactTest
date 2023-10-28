@@ -22,13 +22,30 @@ let gameState = {
     y: 5,
     velocityX:0,
     velocityY:0,
-    direction: 1.3082443894581433,
     id: "AhzgAtklgo2FJvwWAADO",
     hp: 100
   }],
-    playerIDToIndex:new Map()
+    playerIDToIndex:new Map(),
+  shipArray:[{
+    alive: true,
+    controledBy: undefined,
+    rotation:0,
+    x: 0,
+    y: 0,
+    velocityX:0,
+    velocityY:0,
+    shipRooms:[
+      [0,0,0,0,0],
+      [0,3,1,0,0],
+      [0,3,1,1,2],
+      [0,3,1,0,0],
+      [0,0,0,0,0]
+  ]
+  }]
 }
 gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0)
+
+
 function update(){
   const lastTimestamp = gameState.t
   gameState.t = Date.now()
