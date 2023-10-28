@@ -47,7 +47,7 @@ function Ship({ x, y, rotation, ship }){
           <Engine
             x={shipRoomIndex * 64}
             y={shipRoomY * 64}
-            moveForward={true}
+            moveForward={ship.moveForward}
           />
           )}
         </>
@@ -57,7 +57,7 @@ function Ship({ x, y, rotation, ship }){
   ));
 
   return (
-    <Container x={x} y={y} pivot={{ x: 0.5, y: 0.5 }} rotation={rotation}>
+    <Container x={x} y={y} pivot={{ x: 32*5, y: 32*5 }} rotation={rotation}>
       {shipRoomArray}
     </Container>
   )
@@ -69,7 +69,7 @@ function BasicRoom({ x, y }) {
       image={'/basicRoom.png'}
       x={x}
       y={y}
-      anchor={{ x: 0.5, y: 0.5 }}
+      anchor={{ x: 0, y: 0 }}
     />
   );
 }
@@ -80,7 +80,7 @@ function PodRoom({ x, y }) {
       image={'/pod.png'}
       x={x}
       y={y}
-      anchor={{ x: 0.5, y: 0.5 }}
+      anchor={{ x: 0, y: 0 }}
     />
   );
 }
@@ -99,19 +99,19 @@ function renderShips(playerArray, shipArray, cameraX, cameraY) {
 
 function Pod({ x, y, rotation, player }) {
   return (
-    <Container x={x} y={y} pivot={{ x: 0.5, y: 0.5 }} rotation={rotation}>
+    <Container x={x} y={y} pivot={{ x: 0, y: 0 }} rotation={rotation}>
       <Sprite
         image={'/pod.png'}
         x={0}
         y={0}
-        anchor={{ x: 0.5, y: 0.5 }}
+        anchor={{ x: 0, y: 0 }}
       />
       {true &&(
       <Sprite
         image={'/captainsWheel.png'}
         x={0}
         y={0}
-        anchor={{ x: 0.5, y: 0.5 }}
+        anchor={{ x: 0, y: 0 }}
       />
       
       )}
@@ -129,7 +129,7 @@ function Engine({moveForward, x, y}) {
       image={'/jetEngine.png'}
       x={x}
       y={y}
-      anchor={{ x: 0.5, y: 0.5 }}
+      anchor={{ x: 0, y: 0 }}
     />
     )}
     {moveForward != true &&(
@@ -137,7 +137,7 @@ function Engine({moveForward, x, y}) {
       image={'/jetEngineOff.png'}
       x={x}
       y={y}
-      anchor={{ x: 0.5, y: 0.5 }}
+      anchor={{ x: 0, y: 0 }}
     />
     )}
     </>
@@ -188,8 +188,8 @@ function Camera() {
   useEffect(() => {
     // Update history when serverState changes
     if(gameState.playerArray[indexInPlayerArray] === undefined){return}
-    setX(gameState.playerArray[indexInPlayerArray].x - window.innerWidth/2)
-    setY(gameState.playerArray[indexInPlayerArray].y - window.innerHeight/2)
+    setX(gameState.shipArray[gameState.playerArray[indexInPlayerArray].insideShip].x - window.innerWidth/2)
+    setY(gameState.shipArray[gameState.playerArray[indexInPlayerArray].insideShip].y- window.innerHeight/2)
   }, [gameState]);
 
   useTick((delta) => {
