@@ -13,17 +13,86 @@ export default function App() {
   return (
     <Stage width={window.innerWidth} height={window.innerHeight}>
       <Camera />
-      {/* {renderBunnies(gameState.playerArray)} */}
     </Stage>
   );
 }
 
-function renderBunnies(playerArray, cameraX, cameraY) {
-  return playerArray.map((player, index) => (
+function renderActualShips(shipArray, cameraX, cameraY){
+  // console.log(shipArray)
+  return shipArray.map((ship, index) => (
+    <Ship key={index} x={ship.x - cameraX} y={ship.y -cameraY} rotation={ship.rotation} ship={ship} />
+  )
+  );
+}
+
+function Ship({ x, y, rotation, ship }){
+  const shipRoomArray = ship.shipRooms.map((row, shipRoomY) => (
+    <Container key={shipRoomY}>
+      {row.map((shipRoom, shipRoomIndex) => (
+        // <span key={shipRoomX}/>
+        <>
+          {shipRoom === 1 &&(
+          <BasicRoom
+            x={shipRoomIndex * 64}
+            y={shipRoomY * 64}
+          />
+          )}
+          {shipRoom === 2 &&(
+          <PodRoom
+            x={shipRoomIndex * 64}
+            y={shipRoomY * 64}
+          />
+          )}
+          {shipRoom === 3 &&(
+          <Engine
+            x={shipRoomIndex * 64}
+            y={shipRoomY * 64}
+            moveForward={true}
+          />
+          )}
+        </>
+        
+      ))}
+    </Container>
+  ));
+
+  return (
+    <Container x={x} y={y} pivot={{ x: 0.5, y: 0.5 }} rotation={rotation}>
+      {shipRoomArray}
+    </Container>
+  )
+}
+
+function BasicRoom({ x, y }) {
+  return (
+    <Sprite
+      image={'/basicRoom.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0.5, y: 0.5 }}
+    />
+  );
+}
+
+function PodRoom({ x, y }) {
+  return (
+    <Sprite
+      image={'/pod.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0.5, y: 0.5 }}
+    />
+  );
+}
+
+function renderShips(playerArray, shipArray, cameraX, cameraY) {
+  // return playerArray.map((player, index) => (
+  //   <Pod key={index} x={player.x - cameraX} y={player.y -cameraY} rotation={player.rotation} player={player} />
+  // )
+  
+  return shipArray.map((player, index) => (
     <Pod key={index} x={player.x - cameraX} y={player.y -cameraY} rotation={player.rotation} player={player} />
   )
-  
-  
 
   );
 }
@@ -46,28 +115,28 @@ function Pod({ x, y, rotation, player }) {
       />
       
       )}
-      <Engine moveForward = {player.moveForward}/>
+      <Engine moveForward = {player.moveForward} x={-64} y ={0}/>
       
     </Container>
   );
 }
 
-function Engine({moveForward}) {
+function Engine({moveForward, x, y}) {
   return(
     <>
   {moveForward === true &&(
     <Sprite
       image={'/jetEngine.png'}
-      x={-64}
-      y={0}
+      x={x}
+      y={y}
       anchor={{ x: 0.5, y: 0.5 }}
     />
     )}
     {moveForward != true &&(
     <Sprite
       image={'/jetEngineOff.png'}
-      x={-64}
-      y={0}
+      x={x}
+      y={y}
       anchor={{ x: 0.5, y: 0.5 }}
     />
     )}
@@ -91,7 +160,8 @@ function Camera() {
   const [indexInPlayerArray, setIndexInPlayerArray] = useState(0);
   const [gameState, setGameState] = useState({
     t: Date.now(),
-    playerArray: []
+    playerArray: [],
+    shipArray: []
   });
   const [serverState, setServerState] = useState(gameState)
   const [history, setHistory] = useState([gameState])
@@ -230,7 +300,8 @@ function Camera() {
     <>
       <GridBackground x={x} y={y} />
       
-      {renderBunnies(gameState.playerArray, x, y)}
+      {renderShips(gameState.playerArray, gameState.playerArray, x, y)}
+      {renderActualShips(gameState.shipArray, x, y)}
 
     </>
   );
