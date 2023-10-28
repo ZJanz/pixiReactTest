@@ -26,22 +26,26 @@ let gameState = {
     hp: 100
   }],
     playerIDToIndex:new Map(),
-  shipArray:[{
+  shipArray:[{id: 0,
     alive: true,
-    controledBy: undefined,
+    controledBy: 0,
     rotation:0,
     x: 0,
     y: 0,
     velocityX:0,
     velocityY:0,
+    moveForward: false,
+    rotationVelocity: 0,
+    rotation: 0,
     shipRooms:[
-      [0,1,1,1,0],
-      [0,3,1,1,0],
-      [0,3,1,1,2],
-      [0,3,1,1,0],
-      [0,1,1,1,0]
-  ]
-  }]
+      [0,0,0,0,0],
+      [0,0,1,0,0],
+      [3,1,1,1,2],
+      [0,0,1,0,0],
+      [0,0,0,0,0]
+  ],
+    playersOnShip:[0]
+  }],
 }
 gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0)
 
@@ -131,8 +135,8 @@ gameState.interval = setInterval(update, 1000/60);
 io.on('connection', (socket) => {
   console.log('A user connected');
   gameState.playerArray.push({
-    x: 64*3,
-    y: 64*3,
+    x: 64*5/2,
+    y: 64*5/2,
     mode: 1,
     velocityX: 0,
     velocityY: 0,
@@ -151,7 +155,7 @@ io.on('connection', (socket) => {
   gameState.shipArray.push({
       id: gameState.shipArray.length,
       alive: true,
-      controledBy: gameState.playerArray,
+      controledBy: gameState.playerArray.length-1,
       rotation:0,
       x: 0,
       y: 0,
@@ -166,12 +170,13 @@ io.on('connection', (socket) => {
         [3,1,1,1,2],
         [0,0,1,0,0],
         [0,0,0,0,0]
-    ]
+    ],
+      playersOnShip:[gameState.playerArray.length-1]
   })
+  
   const index = gameState.playerArray.length-1
   gameState.playerIDToIndex.set(`${gameState.playerArray[index].id}`, index)
 
-  console.log(gameState.playerArray)
   io.to(socket.id).emit("indexInPlayerArray", index)
 
   socket.on('movement', (data) => {
