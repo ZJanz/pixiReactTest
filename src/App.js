@@ -245,6 +245,22 @@ function Camera() {
           setWKey(true);
           socket.emit('movement', { key: 'w' });
           break;
+        case 'a':
+          setWKey(true);
+          socket.emit('movement', { key: 'a' });
+          break;
+        case 's':
+          setWKey(true);
+          socket.emit('movement', { key: 's' });
+          break;
+        case 'd':
+          setWKey(true);
+          socket.emit('movement', { key: 'd' });
+          break;
+        case 'f':
+          setWKey(true);
+          socket.emit('interact', { key: 'f' });
+          break;
         // case 's':
         //   setSKey(true);
         //   socket.emit('movement', { key: 's' });

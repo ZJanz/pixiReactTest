@@ -57,49 +57,36 @@ function update(){
 
   for(i=0; i<gameState.playerArray.length; i++){
     let player = gameState.playerArray[i]
-    if(player.rotateLeft === true){
-      player.rotationVelocity = (player.rotationVelocity - 0.01*delta)
-    }
-    if(player.rotateRight === true){
-      player.rotationVelocity = (player.rotationVelocity + 0.01*delta)
-    }
+    
     if (player.moveForward === true && player.moveDown === false && player.moveLeft === false && player.moveRight === false) {
-      // player.velocityY = (player.velocityY - 1 * delta);
-
-      const angleInRadians = player.rotation; 
-      player.velocityX += Math.cos(angleInRadians) * 1*delta;
-      player.velocityY += Math.sin(angleInRadians) * 1*delta;
+      player.y = (player.y - 1 * delta);
     }
     if (player.moveDown === true && player.moveForward === false && player.moveLeft === false && player.moveRight === false) {
-      player.velocityY = (player.velocityY + 1 * delta);
+      player.y = (player.y + 1 * delta);
     }
     if (player.moveLeft === true && player.moveDown === false && player.moveForward === false && player.moveRight === false) {
-      player.velocityX = (player.velocityX - 1 * delta);
+      player.x = (player.x - 1 * delta);
     }
     if (player.moveRight === true && player.moveDown === false && player.moveLeft === false && player.moveForward === false) {
-      player.velocityX = (player.velocityX + 1 * delta);
+      player.x = (player.x + 1 * delta);
     }
     if (player.moveForward === true && player.moveDown === false && player.moveLeft === true && player.moveRight === false) {
-      player.velocityY = (player.velocityY - 0.5 * delta);
-      player.velocityX = (player.velocityX - 0.5 * delta);
+      player.y = (player.y - 0.5 * delta);
+      player.x = (player.x - 0.5 * delta);
     }
     if (player.moveForward === true && player.moveDown === false && player.moveLeft === false && player.moveRight === true) {
-      player.velocityY = (player.velocityY - 0.5 * delta);
-      player.velocityX = (player.velocityX + 0.5 * delta);
+      player.y = (player.y - 0.5 * delta);
+      player.x = (player.x + 0.5 * delta);
     }
     if (player.moveDown === true && player.moveForward === false && player.moveLeft === true && player.moveRight === false) {
-      player.velocityY = (player.velocityY + 0.5 * delta);
-      player.velocityX = (player.velocityX - 0.5 * delta);
+      player.y = (player.y + 0.5 * delta);
+      player.x = (player.x - 0.5 * delta);
     }
     if (player.moveDown === true && player.moveForward === false && player.moveLeft === false && player.moveRight === true) {
-      player.velocityY = (player.velocityY + 0.5 * delta);
-      player.velocityX = (player.velocityX + 0.5 * delta);
+      player.y = (player.y + 0.5 * delta);
+      player.x = (player.x + 0.5 * delta);
     }
 
-    player.rotation += (player.rotationVelocity * delta)
-
-    player.x +=(player.velocityX * delta);
-    player.y += (player.velocityY * delta);
     
     //Need to omit ids from gamestate possibly
     io.to(gameState.playerArray[i].id).emit("gameState", gameState)
@@ -196,12 +183,6 @@ io.on('connection', (socket) => {
     if(data.key === 'd' && gameState.playerArray[playerArrayPosition].mode === 0){
       gameState.playerArray[playerArrayPosition].moveRight = true
     }
-    if(data.key === 'q' && gameState.playerArray[playerArrayPosition].mode === 0){
-      gameState.playerArray[playerArrayPosition].rotateLeft = true
-    }
-    if(data.key === 'e' && gameState.playerArray[playerArrayPosition].mode === 0){
-      gameState.playerArray[playerArrayPosition].rotateRight = true
-    }
     if(data.key === 'w' && gameState.playerArray[playerArrayPosition].mode === 1){
       gameState.shipArray[ship].moveForward = true
     }
@@ -213,6 +194,21 @@ io.on('connection', (socket) => {
     }
     // You can perform any necessary server-side logic here based on the received key.
   });
+  socket.on('interact', (data) => {
+    const playerArrayPosition = gameState.playerIDToIndex.get(socket.id);
+    const shipArrayPosition = gameState.playerArray[playerArrayPosition].insideShip;
+    if(gameState.playerArray[playerArrayPosition].mode === 0){
+      gameState.playerArray[playerArrayPosition].mode = 1
+      gameState.shipArray[shipArrayPosition].controledBy = playerArrayPosition
+      return
+    }
+    if(gameState.playerArray[playerArrayPosition].mode === 1){
+      gameState.playerArray[playerArrayPosition].mode = 0
+      gameState.shipArray[shipArrayPosition].controledBy = -1
+
+      return
+    }
+  })
 
   socket.on('stopMovement', (data) => {
     console.log('Received movement key:', data.key);
