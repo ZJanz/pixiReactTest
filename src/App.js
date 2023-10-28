@@ -20,12 +20,15 @@ export default function App() {
 
 function renderBunnies(playerArray, cameraX, cameraY) {
   return playerArray.map((player, index) => (
-    <Pod key={index} x={player.x - cameraX} y={player.y -cameraY} rotation={player.rotation} />
-    
-  ));
+    <Pod key={index} x={player.x - cameraX} y={player.y -cameraY} rotation={player.rotation} player={player} />
+  )
+  
+  
+
+  );
 }
 
-function Pod({ x, y, rotation }) {
+function Pod({ x, y, rotation, player }) {
   return (
     <Container x={x} y={y} pivot={{ x: 0.5, y: 0.5 }} rotation={rotation}>
       <Sprite
@@ -33,26 +36,43 @@ function Pod({ x, y, rotation }) {
         x={0}
         y={0}
         anchor={{ x: 0.5, y: 0.5 }}
-        // rotation={rotation}
       />
+      {true &&(
       <Sprite
         image={'/captainsWheel.png'}
         x={0}
         y={0}
         anchor={{ x: 0.5, y: 0.5 }}
-        // rotation={rotation}
-
       />
-      <Sprite
-        image={'/jetEngine.png'}
-        x={-64}
-        y={0}
-        anchor={{ x: 0.5, y: 0.5 }}
-        // rotation={rotation}
-
-      />
+      
+      )}
+      <Engine moveForward = {player.moveForward}/>
+      
     </Container>
   );
+}
+
+function Engine({moveForward}) {
+  return(
+    <>
+  {moveForward === true &&(
+    <Sprite
+      image={'/jetEngine.png'}
+      x={-64}
+      y={0}
+      anchor={{ x: 0.5, y: 0.5 }}
+    />
+    )}
+    {moveForward != true &&(
+    <Sprite
+      image={'/jetEngineOff.png'}
+      x={-64}
+      y={0}
+      anchor={{ x: 0.5, y: 0.5 }}
+    />
+    )}
+    </>
+  )
 }
 
 function Camera() {
