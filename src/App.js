@@ -17,17 +17,18 @@ export default function App() {
   );
 }
 
-function renderActualShips(shipArray, cameraX, cameraY){
+function renderActualShips(playerArray, shipArray, cameraX, cameraY){
   // console.log(shipArray)
   return shipArray.map((ship, index) => (
-    <Ship key={index} x={ship.x - cameraX} y={ship.y -cameraY} rotation={ship.rotation} ship={ship} />
+    <Ship key={index} x={ship.x - cameraX} y={ship.y -cameraY} rotation={ship.rotation} ship={ship} playerArray={playerArray} />
   )
   );
 }
 
-function Ship({ x, y, rotation, ship }){
+function Ship({ x, y, rotation, ship, playerArray }){
   const shipRoomArray = ship.shipRooms.map((row, shipRoomY) => (
     <Container key={shipRoomY}>
+      <>
       {row.map((shipRoom, shipRoomIndex) => (
         // <span key={shipRoomX}/>
         <>
@@ -51,8 +52,11 @@ function Ship({ x, y, rotation, ship }){
           />
           )}
         </>
-        
       ))}
+        {ship.playersOnShip && ship.playersOnShip.map((player, index) => (
+          <Player key={index} x={playerArray[player].x} y={playerArray[player].y} id={playerArray[player].id} />
+        ))}
+      </>
     </Container>
   ));
 
@@ -61,6 +65,17 @@ function Ship({ x, y, rotation, ship }){
       {shipRoomArray}
     </Container>
   )
+}
+
+function Player({x, y}) {
+  return (
+    <Sprite
+      image={'/stickman.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />
+  );
 }
 
 function BasicRoom({ x, y }) {
@@ -301,7 +316,7 @@ function Camera() {
       <GridBackground x={x} y={y} />
       
       {renderShips(gameState.playerArray, gameState.playerArray, x, y)}
-      {renderActualShips(gameState.shipArray, x, y)}
+      {renderActualShips(gameState.playerArray, gameState.shipArray, x, y)}
 
     </>
   );
