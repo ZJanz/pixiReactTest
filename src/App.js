@@ -27,31 +27,31 @@ function renderBunnies(playerArray, cameraX, cameraY) {
 
 function Pod({ x, y, rotation }) {
   return (
-    <>
+    <Container x={x} y={y} pivot={{ x: 0.5, y: 0.5 }} rotation={rotation}>
       <Sprite
         image={'/pod.png'}
-        x={x}
-        y={y}
+        x={0}
+        y={0}
         anchor={{ x: 0.5, y: 0.5 }}
-        rotation={rotation}
+        // rotation={rotation}
       />
       <Sprite
         image={'/captainsWheel.png'}
-        x={x}
-        y={y}
+        x={0}
+        y={0}
         anchor={{ x: 0.5, y: 0.5 }}
-        rotation={rotation}
+        // rotation={rotation}
 
       />
       <Sprite
         image={'/jetEngine.png'}
-        x={x}
-        y={y+64}
+        x={-64}
+        y={0}
         anchor={{ x: 0.5, y: 0.5 }}
-        rotation={rotation}
+        // rotation={rotation}
 
       />
-    </>
+    </Container>
   );
 }
 
