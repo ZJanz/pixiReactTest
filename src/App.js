@@ -20,18 +20,38 @@ export default function App() {
 
 function renderBunnies(playerArray, cameraX, cameraY) {
   return playerArray.map((player, index) => (
-    <Bunny key={index} x={player.x - cameraX} y={player.y -cameraY} />
+    <Pod key={index} x={player.x - cameraX} y={player.y -cameraY} rotation={player.rotation} />
+    
   ));
 }
 
-function Bunny({ x, y }) {
+function Pod({ x, y, rotation }) {
   return (
-    <Sprite
-      image={'https://pixijs.io/pixi-react/img/bunny.png'}
-      x={x}
-      y={y}
-      anchor={{ x: 0.5, y: 0.5 }}
-    />
+    <>
+      <Sprite
+        image={'/pod.png'}
+        x={x}
+        y={y}
+        anchor={{ x: 0.5, y: 0.5 }}
+        rotation={rotation}
+      />
+      <Sprite
+        image={'/captainsWheel.png'}
+        x={x}
+        y={y}
+        anchor={{ x: 0.5, y: 0.5 }}
+        rotation={rotation}
+
+      />
+      <Sprite
+        image={'/jetEngine.png'}
+        x={x}
+        y={y+64}
+        anchor={{ x: 0.5, y: 0.5 }}
+        rotation={rotation}
+
+      />
+    </>
   );
 }
 
@@ -108,22 +128,30 @@ function Camera() {
   useEffect(() => {
     const handleKeyDown = (event) => {
       switch (event.key) {
+        case 'e':
+          setWKey(true);
+          socket.emit('movement', { key: 'e' });
+          break;
+        case 'q':
+          setWKey(true);
+          socket.emit('movement', { key: 'q' });
+          break;
         case 'w':
           setWKey(true);
           socket.emit('movement', { key: 'w' });
           break;
-        case 's':
-          setSKey(true);
-          socket.emit('movement', { key: 's' });
-          break;
-        case 'a':
-          setAKey(true);
-          socket.emit('movement', { key: 'a' });
-          break;
-        case 'd':
-          setDKey(true);
-          socket.emit('movement', { key: 'd' });
-          break;
+        // case 's':
+        //   setSKey(true);
+        //   socket.emit('movement', { key: 's' });
+        //   break;
+        // case 'a':
+        //   setAKey(true);
+        //   socket.emit('movement', { key: 'a' });
+        //   break;
+        // case 'd':
+        //   setDKey(true);
+        //   socket.emit('movement', { key: 'd' });
+        //   break;
         default:
           break;
       }
@@ -147,6 +175,13 @@ function Camera() {
           setDKey(false);
           socket.emit('stopMovement', { key: 'd' });
           break;
+        case 'e':
+          socket.emit('stopMovement', { key: 'e' });
+          break;
+        case 'q':
+          socket.emit('stopMovement', { key: 'q' });
+          break;
+        
         default:
           break;
       }
@@ -174,13 +209,7 @@ function Camera() {
   return (
     <>
       <GridBackground x={x} y={y} />
-      <Sprite
-        image={'https://pixijs.io/pixi-react/img/bunny.png'}
-        x={300}
-        y={300}
-        anchor={{ x: 0.5, y: 0.5 }}
-        rotation={rotation}
-      />
+      
       {renderBunnies(gameState.playerArray, x, y)}
 
     </>
