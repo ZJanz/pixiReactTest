@@ -53,14 +53,24 @@ function startServer() {
       rotation: 0,
       shipRooms: [
         [0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0],
-        [3, 1, 1, 1, 2],
-        [0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0]
       ],
       playersOnShip: [0],
       speed: 0.1
     }],
+    bulletArray: [
+    //   {
+    //   dateOfBirth: Date.now(),
+    //   x: 0,
+    //   y: 0,
+    //   velocityX: 0,
+    //   velocityY: 0,
+    //   rotation: 0
+    // }
+  ]
   };
   gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0);
 
@@ -72,6 +82,10 @@ function startServer() {
     const delta = (gameState.t - lastTimestamp) / 16;
 
     gameSpace = d3Quadtree.quadtree(gameState.shipArray, d => d.x, d => d.y);
+
+    gameSpace.addAll(gameState.bulletArray);
+
+
 
     for (let i = 0; i < gameState.playerArray.length; i++) {
       let player = gameState.playerArray[i];
@@ -108,6 +122,43 @@ function startServer() {
       io.to(player.id).emit("gameState", gameState);
     }
 
+    for (let i = gameState.bulletArray.length-1; i >= 0; i--) {
+      gameSpace.remove(gameState.bulletArray[i]);
+
+      gameState.bulletArray[i].x += (gameState.bulletArray[i].velocityX * delta);
+      gameState.bulletArray[i].y += (gameState.bulletArray[i].velocityY * delta);
+
+      const nearbyShips = [];
+      gameSpace.visit(function(node, x1, y1, x2, y2) {
+        if (!node.length) {
+          do {
+            const otherShip = node.data;
+            const distance = Math.sqrt((otherShip.x - gameState.bulletArray[i].x) ** 2 + (otherShip.y - gameState.bulletArray[i].y) ** 2);
+            if (distance < 64*5/2+8 && otherShip !== gameState.shipArray[i]) {
+              nearbyShips.push(otherShip);
+            }
+          } while (node = node.next);
+        }
+        return x1 > gameState.bulletArray[i].x + 8 || x2 < gameState.bulletArray[i].x - 8 || y1 > gameState.bulletArray[i].y + 8 || y2 < gameState.bulletArray[i].y - 8;
+      });
+
+      nearbyShips.forEach(otherShip => {
+        const distance = Math.sqrt((otherShip.x - gameState.bulletArray[i].x) ** 2 + (otherShip.y - gameState.bulletArray[i].y) ** 2);
+        if (distance < 64*5/2+8) {
+          console.log("Collision bullet");
+          // Perform collision handling here...
+          // for (let y = 0; y < gameState.shipArray[i].shipRooms.length; y++){
+          //   for (let x = 0; x < gameState.shipArray[i].shipRooms[y].length; x++){
+          //     const room = gameState.shipArray[i].shipRooms[y][x]
+          //   }
+
+          // }
+        }
+      })
+
+
+    }
+
     for (let i = 0; i < gameState.shipArray.length; i++) {
       // Remove ship from quadtree before position update
     gameSpace.remove(gameState.shipArray[i]);
@@ -136,19 +187,25 @@ function startServer() {
           do {
             const otherShip = node.data;
             const distance = Math.sqrt((otherShip.x - gameState.shipArray[i].x) ** 2 + (otherShip.y - gameState.shipArray[i].y) ** 2);
-            if (distance < 100 && otherShip !== gameState.shipArray[i]) {
+            if (distance < 64*5 && otherShip !== gameState.shipArray[i]) {
               nearbyShips.push(otherShip);
             }
           } while (node = node.next);
         }
-        return x1 > gameState.shipArray[i].x + 100 || x2 < gameState.shipArray[i].x - 100 || y1 > gameState.shipArray[i].y + 100 || y2 < gameState.shipArray[i].y - 100;
+        return x1 > gameState.shipArray[i].x + 64*5 || x2 < gameState.shipArray[i].x - 64*5 || y1 > gameState.shipArray[i].y + 64*5 || y2 < gameState.shipArray[i].y - 64*5;
       });
 
       nearbyShips.forEach(otherShip => {
         const distance = Math.sqrt((otherShip.x - gameState.shipArray[i].x) ** 2 + (otherShip.y - gameState.shipArray[i].y) ** 2);
-        if (distance < 20) {
+        if (distance < 64*5) {
           console.log("Collision");
           // Perform collision handling here...
+          for (let y = 0; y < gameState.shipArray[i].shipRooms.length; y++){
+            for (let x = 0; x < gameState.shipArray[i].shipRooms[y].length; x++){
+              const room = gameState.shipArray[i].shipRooms[y][x]
+            }
+
+          }
         }
       })
       
@@ -191,13 +248,13 @@ function startServer() {
         rotationVelocity: 0,
         rotation: 0,
         speed:0.1,
-        shipRooms:[
-          [0,0,0,0,0],
-          [0,0,1,0,0],
-          [3,1,1,1,2],
-          [0,0,1,0,0],
-          [0,0,0,0,0]
-      ],
+        shipRooms: [
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+          [1, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0]
+        ],
         playersOnShip:[gameState.playerArray.length-1]
       
     })
@@ -247,6 +304,29 @@ function startServer() {
       if(gameState.playerArray[playerArrayPosition].mode === 1){
         gameState.playerArray[playerArrayPosition].mode = 0
         gameState.shipArray[shipArrayPosition].controledBy = -1
+  
+        return
+      }
+    })
+    socket.on('shoot', (data) => {
+      console.log("shoot")
+      const playerArrayPosition = gameState.playerIDToIndex.get(socket.id);
+      const shipArrayPosition = gameState.playerArray[playerArrayPosition].insideShip;
+      if(gameState.playerArray[playerArrayPosition].mode === 0){
+        return
+      }
+      if(gameState.playerArray[playerArrayPosition].mode === 1){
+        gameState.bulletArray.push({
+          
+          dateOfBirth: Date.now(),
+          x: gameState.shipArray[shipArrayPosition].x,
+          y: gameState.shipArray[shipArrayPosition].y,
+          velocityX: gameState.shipArray[shipArrayPosition].velocityX,
+          velocityY: gameState.shipArray[shipArrayPosition].velocityY,
+          rotation: gameState.shipArray[shipArrayPosition].rotation
+          
+        })
+        
   
         return
       }

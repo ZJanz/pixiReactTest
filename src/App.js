@@ -67,6 +67,27 @@ function Ship({ x, y, rotation, ship, playerArray }){
   )
 }
 
+function renderBullets(bulletArray, cameraX, cameraY){
+  // console.log(shipArray)
+  return bulletArray.map((bullet, index) => (
+    <Bullet key={index} x={bullet.x - cameraX} y={bullet.y -cameraY} rotation={bullet.rotation} bullet={bullet} />
+  )
+  );
+}
+
+function Bullet({x, y, rotation}){
+  return(
+  <Sprite
+      image={'/bullet.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 4, y: 4 }}
+      rotation={rotation}
+    />
+  )
+}
+
+
 function Player({x, y}) {
   return (
     <Sprite
@@ -176,7 +197,8 @@ function Camera() {
   const [gameState, setGameState] = useState({
     t: Date.now(),
     playerArray: [],
-    shipArray: []
+    shipArray: [],
+    bulletArray: []
   });
   const [serverState, setServerState] = useState(gameState)
   const [history, setHistory] = useState([gameState])
@@ -261,6 +283,9 @@ function Camera() {
           setWKey(true);
           socket.emit('interact', { key: 'f' });
           break;
+        case 'g':
+          socket.emit('shoot', { key: 'g' });
+          break;
         // case 's':
         //   setSKey(true);
         //   socket.emit('movement', { key: 's' });
@@ -333,6 +358,8 @@ function Camera() {
       
       {renderShips(gameState.playerArray, gameState.playerArray, x, y)}
       {renderActualShips(gameState.playerArray, gameState.shipArray, x, y)}
+      {renderBullets(gameState.bulletArray, x, y)}
+
 
     </>
   );
