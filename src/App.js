@@ -101,6 +101,7 @@ function Bullet({x, y, rotation}){
       y={y}
       anchor={{ x: 0.5, y: 0.5 }}
       rotation={rotation}
+      cullable={true}
     />
   )
 }

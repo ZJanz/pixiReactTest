@@ -87,6 +87,37 @@ function startServer() {
   let gameSpace = d3Quadtree.quadtree(gameState.shipArray, d => d.x, d => d.y);
   gameSpace.addAll(gameState.bulletArray);
 
+  function determineHitRoom(ship, bulletX, bulletY){
+      const rotation = ship.rotation;
+
+      // Adjust the bullet's position relative to the ship's position
+    const adjustedBulletX = bulletX - ship.x;
+    const adjustedBulletY = bulletY - ship.y;
+
+    // Adjust for ship rotation (rotate the hit point back)
+    const rotatedBulletX =
+        adjustedBulletX * Math.cos(-rotation) - adjustedBulletY * Math.sin(-rotation);
+    const rotatedBulletY =
+        adjustedBulletX * Math.sin(-rotation) + adjustedBulletY * Math.cos(-rotation);
+
+    // Calculate the actual coordinates based on ship's room size
+    const roomSize = 64; // Size of each room
+    const roomArray = ship.shipRooms;
+
+    const roomX = Math.floor(rotatedBulletX / roomSize)+3;
+    const roomY = Math.floor(rotatedBulletY / roomSize)+3;
+      console.log(roomX+3)
+      console.log(roomY+3)
+      // Check if the room is a valid room that can be collided with (room with a '1' in the shipRooms array)
+      if (roomArray[roomY] && roomArray[roomY][roomX] === 1) {
+          // The bullet hit a valid room
+          return { roomX, roomY };
+      } else {
+          // The bullet hit an empty space or a non-collidable room
+          return null;
+      }
+  }
+
 
   function update() {
     const lastTimestamp = gameState.t;
@@ -138,7 +169,7 @@ function startServer() {
       gameSpace.remove(gameState.bulletArray[i]);
       if(Date.now() - gameState.bulletArray[i].dateOfBirth > 1000){
         gameState.bulletArray.splice(i, 1)
-        return
+        return  
       }
 
       gameState.bulletArray[i].x += (gameState.bulletArray[i].velocityX * delta);
@@ -163,8 +194,17 @@ function startServer() {
         if(otherShip.speed === undefined){return}
         const distance = Math.sqrt((otherShip.x - gameState.bulletArray[i].x) ** 2 + (otherShip.y - gameState.bulletArray[i].y) ** 2);
         if (distance < 64*5/1.5+8) {
-          console.log(otherShip)
-          console.log("Collision bullet");
+          // console.log(otherShip)
+          // console.log("Collision bullet");
+          
+
+          const hitRoom = determineHitRoom(otherShip, gameState.bulletArray[i].x, gameState.bulletArray[i].y);
+          if (hitRoom) {
+              console.log(`The bullet hit room at (${hitRoom.roomX}, ${hitRoom.roomY}).`);
+              gameState.shipArray[otherShip.id].shipRooms[hitRoom.roomY][hitRoom.roomX] = 0;
+          } else {
+              console.log("The bullet hit an empty space or a non-collidable room.");
+          }
           // Perform collision handling here...
           // for (let y = 0; y < gameState.shipArray[i].shipRooms.length; y++){
           //   for (let x = 0; x < gameState.shipArray[i].shipRooms[y].length; x++){
@@ -365,7 +405,7 @@ function startServer() {
           (weaponLocation.y - 3) * 64 * cosAngle;
 
               // Calculate initial velocities based on ship's direction and current velocity
-        const bulletSpeed = 30; // You can adjust this value to set the initial bullet speed
+        const bulletSpeed = 10; // You can adjust this value to set the initial bullet speed
 
         const shipVelocityX = gameState.shipArray[shipArrayPosition].velocityX;
         const shipVelocityY = gameState.shipArray[shipArrayPosition].velocityY;
