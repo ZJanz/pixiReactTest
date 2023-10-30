@@ -51,6 +51,12 @@ function Ship({ x, y, rotation, ship, playerArray }){
             moveForward={ship.moveForward}
           />
           )}
+          {shipRoom === 4 &&(
+          <WeaponPossibly
+            x={shipRoomIndex * 64}
+            y={shipRoomY * 64}
+          />
+          )}
         </>
       ))}
         {ship.playersOnShip && ship.playersOnShip.map((player, index) => (
@@ -65,6 +71,18 @@ function Ship({ x, y, rotation, ship, playerArray }){
       {shipRoomArray}
     </Container>
   )
+}
+
+function WeaponPossibly({x, y}){
+  return (
+    <Sprite
+      image={'/weaponIGuess.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />
+  );
+
 }
 
 function renderBullets(bulletArray, cameraX, cameraY){

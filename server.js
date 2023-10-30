@@ -53,14 +53,23 @@ function startServer() {
       rotation: 0,
       shipRooms: [
         [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
+        [3, 1, 1, 4, 0],
+        [3, 1, 1, 2, 0],
+        [3, 1, 1, 4, 0],
         [0, 0, 0, 0, 0]
       ],
       playersOnShip: [0],
       speed: 0.1,
-      type:"ship"
+      type:"ship",
+        weaponLocations:[{
+            x:4,
+            y:2
+          },
+          {
+            x:4,
+            y:4
+          }
+        ],
     }],
     bulletArray: [
     //   {
@@ -127,7 +136,7 @@ function startServer() {
 //////
     for (let i = gameState.bulletArray.length-1; i >= 0; i--) {
       gameSpace.remove(gameState.bulletArray[i]);
-      if(Date.now() - gameState.bulletArray[i].dateOfBirth > 11000){
+      if(Date.now() - gameState.bulletArray[i].dateOfBirth > 1000){
         gameState.bulletArray.splice(i, 1)
         return
       }
@@ -259,11 +268,20 @@ function startServer() {
         rotation: 0,
         speed:0.1,
         shipRooms: [
-          [1, 1, 1, 1, 1],
-          [1, 1, 1, 1, 1],
-          [1, 1, 1, 1, 1],
-          [1, 1, 1, 1, 1],
-          [1, 1, 1, 1, 1]
+          [0, 0, 0, 0, 0],
+          [3, 1, 1, 4, 0],
+          [3, 1, 1, 2, 0],
+          [3, 1, 1, 4, 0],
+          [0, 0, 0, 0, 0]
+        ],
+        weaponLocations:[{
+            x:4,
+            y:2
+          },
+          {
+            x:4,
+            y:4
+          }
         ],
         playersOnShip:[gameState.playerArray.length-1]
       
@@ -326,22 +344,50 @@ function startServer() {
         return
       }
       if(gameState.playerArray[playerArrayPosition].mode === 1){
-        const newBullet = {
-          
-          
-            dateOfBirth: Date.now(),
-            x: gameState.shipArray[shipArrayPosition].x +0,
-            y: gameState.shipArray[shipArrayPosition].y +0,
-            velocityX: gameState.shipArray[shipArrayPosition].velocityX,
-            velocityY: gameState.shipArray[shipArrayPosition].velocityY,
-            rotation: gameState.shipArray[shipArrayPosition].rotation,
-            type:1,
-          
 
-        }
+    
+      for(let i = 0; i <gameState.shipArray[shipArrayPosition].weaponLocations.length; i++){
+
+        const weaponLocation = gameState.shipArray[shipArrayPosition].weaponLocations[i];
+
+        // Calculate the adjusted coordinates based on ship rotation
+        const cosAngle = Math.cos(gameState.shipArray[shipArrayPosition].rotation);
+        const sinAngle = Math.sin(gameState.shipArray[shipArrayPosition].rotation);
+
+        const adjustedX =
+          gameState.shipArray[shipArrayPosition].x +
+          (weaponLocation.x - 3) * 64 * cosAngle -
+          (weaponLocation.y - 3) * 64 * sinAngle;
+
+        const adjustedY =
+          gameState.shipArray[shipArrayPosition].y +
+          (weaponLocation.x - 3) * 64 * sinAngle +
+          (weaponLocation.y - 3) * 64 * cosAngle;
+
+              // Calculate initial velocities based on ship's direction and current velocity
+        const bulletSpeed = 30; // You can adjust this value to set the initial bullet speed
+
+        const shipVelocityX = gameState.shipArray[shipArrayPosition].velocityX;
+        const shipVelocityY = gameState.shipArray[shipArrayPosition].velocityY;
+
+        const bulletVelocityX = bulletSpeed * cosAngle + shipVelocityX;
+        const bulletVelocityY = bulletSpeed * sinAngle + shipVelocityY;
+
+        const newBullet = {
+          dateOfBirth: Date.now(),
+          x: adjustedX,
+          y: adjustedY,
+          velocityX: bulletVelocityX,
+          velocityY: bulletVelocityY,
+          rotation: gameState.shipArray[shipArrayPosition].rotation,
+          type: 1,
+      };
         gameState.bulletArray.push(newBullet)
         
         gameSpace.add(newBullet); 
+
+      }
+         
         
         return
       }
