@@ -36,7 +36,12 @@ function startServer() {
       velocityX: 0,
       velocityY: 0,
       id: "AhzgAtklgo2FJvwWAADO",
-      hp: 100
+      hp: 100,
+      insideShip:0,
+      controllingShip:0,
+      direction: 0,
+      insideRoomX: 3,
+      insideRoomY: 3
     }],
     playerIDToIndex: new Map(),
     shipArray: [{
@@ -134,34 +139,82 @@ function startServer() {
 
     for (let i = 0; i < gameState.playerArray.length; i++) {
       let player = gameState.playerArray[i];
+      let ship = gameState.shipArray[player.insideShip];
+      const roomSize = 64;
+      let roomType = 0;
+      roomType = ship.shipRooms[player.insideRoomY][player.insideRoomX];
+      console.log(player.insideRoomX + " " + player.insideRoomY);
+      console.log(roomType);
+
+      // Store initial player position
+      const beforePlayerX = player.x;
+      const beforePlayerY = player.y;
+
+
+      let newRoomPlayerX = player.x % 64 - 32
+      let newRoomPlayerY = player.y % 64 - 32
+
 
       if (player.moveForward === true && player.moveDown === false && player.moveLeft === false && player.moveRight === false) {
         player.y = (player.y - 1 * delta);
+        newRoomPlayerY = newRoomPlayerY - 1 * delta
       }
       if (player.moveDown === true && player.moveForward === false && player.moveLeft === false && player.moveRight === false) {
         player.y = (player.y + 1 * delta);
+        newRoomPlayerY = newRoomPlayerY + 1 * delta
       }
       if (player.moveLeft === true && player.moveDown === false && player.moveForward === false && player.moveRight === false) {
         player.x = (player.x - 1 * delta);
+        newRoomPlayerX = (newRoomPlayerX - 1 * delta);
       }
       if (player.moveRight === true && player.moveDown === false && player.moveLeft === false && player.moveForward === false) {
         player.x = (player.x + 1 * delta);
+        newRoomPlayerX = (newRoomPlayerX + 1 * delta);
       }
       if (player.moveForward === true && player.moveDown === false && player.moveLeft === true && player.moveRight === false) {
         player.y = (player.y - 0.5 * delta);
         player.x = (player.x - 0.5 * delta);
+        newRoomPlayerX = (newRoomPlayerX - 0.5 * delta);
+        newRoomPlayerY = newRoomPlayerY - 0.5 * delta
+
       }
       if (player.moveForward === true && player.moveDown === false && player.moveLeft === false && player.moveRight === true) {
         player.y = (player.y - 0.5 * delta);
         player.x = (player.x + 0.5 * delta);
+        newRoomPlayerX = (newRoomPlayerX + 0.5 * delta);
+        newRoomPlayerY = newRoomPlayerY - 0.5 * delta
+
+
       }
       if (player.moveDown === true && player.moveForward === false && player.moveLeft === true && player.moveRight === false) {
         player.y = (player.y + 0.5 * delta);
         player.x = (player.x - 0.5 * delta);
+        newRoomPlayerX = (newRoomPlayerX - 0.5 * delta);
+        newRoomPlayerY = newRoomPlayerY + 0.5 * delta
+
+
       }
       if (player.moveDown === true && player.moveForward === false && player.moveLeft === false && player.moveRight === true) {
         player.y = (player.y + 0.5 * delta);
         player.x = (player.x + 0.5 * delta);
+        newRoomPlayerX = (newRoomPlayerX + 0.5 * delta);
+        newRoomPlayerY = newRoomPlayerY + 0.5 * delta
+
+
+      }
+
+      
+
+      if (roomType === 1) {
+        // Check for collisions in the X-axis
+        if (newRoomPlayerX < -32 || newRoomPlayerX > 32) {
+          player.x = beforePlayerX; // Revert X position
+        }
+    
+        // Check for collisions in the Y-axis
+        if (newRoomPlayerY < -32 || newRoomPlayerY > 32) {
+          player.y = beforePlayerY; // Revert Y position
+        }
       }
 
       io.to(player.id).emit("gameState", gameState);
@@ -204,6 +257,8 @@ function startServer() {
           if (hitRoom) {
               console.log(`The bullet hit room at (${hitRoom.roomX}, ${hitRoom.roomY}).`);
               gameState.shipArray[otherShip.id].shipRooms[hitRoom.roomY][hitRoom.roomX] = 0;
+              gameState.bulletArray.splice(i, 1)
+
           } else {
               console.log("The bullet hit an empty space or a non-collidable room.");
           }
@@ -294,7 +349,10 @@ function startServer() {
       controllingShip:gameState.shipArray.length,
       direction: 0,
       id: socket.id,
-      hp: 100
+      hp: 100,
+      insideRoomX:2,
+      insideRoomY:2,
+      
     })
     gameState.shipArray.push({
         id: gameState.shipArray.length,

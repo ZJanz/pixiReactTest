@@ -242,7 +242,6 @@ function Camera() {
   }, [serverState]);
   
   useEffect(() => {
-    // Update history when serverState changes
     if(gameState.playerArray[indexInPlayerArray] === undefined){return}
     setX(gameState.shipArray[gameState.playerArray[indexInPlayerArray].insideShip].x - window.innerWidth/2)
     setY(gameState.shipArray[gameState.playerArray[indexInPlayerArray].insideShip].y- window.innerHeight/2)
