@@ -206,16 +206,20 @@ function startServer() {
       
 
       if (roomType === 1) {
-        // Check for collisions in the X-axis
-        if (newRoomPlayerX < -32 || newRoomPlayerX > 32) {
-          player.x = beforePlayerX; // Revert X position
+        // Define the gap dimensions
+        const gapWidthX = 6; // Assuming the gap in X-axis is 6 units wide
+        const gapWidthY = 6; 
+    
+        // Check for collisions in the X-axis, allowing movement through the gap
+        if ((newRoomPlayerX < -32 || newRoomPlayerX > 32) && !(newRoomPlayerY > -gapWidthY && newRoomPlayerY < gapWidthY)) {
+            player.x = beforePlayerX; // Revert X position
         }
     
         // Check for collisions in the Y-axis
-        if (newRoomPlayerY < -32 || newRoomPlayerY > 32) {
-          player.y = beforePlayerY; // Revert Y position
+        if ((newRoomPlayerY < -32 || newRoomPlayerY > 32) && !(newRoomPlayerX > -gapWidthX && newRoomPlayerX < gapWidthX)) {
+            player.y = beforePlayerY; // Revert Y position
         }
-      }
+    }
 
       io.to(player.id).emit("gameState", gameState);
     }

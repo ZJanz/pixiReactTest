@@ -111,8 +111,8 @@ function Player({x, y}) {
   return (
     <Sprite
       image={'/stickman.png'}
-      x={x}
-      y={y}
+      x={x-8}
+      y={y-17}
       anchor={{ x: 0, y: 0 }}
     />
   );
