@@ -81,7 +81,7 @@ function Bullet({x, y, rotation}){
       image={'/bullet.png'}
       x={x}
       y={y}
-      anchor={{ x: 4, y: 4 }}
+      anchor={{ x: 0.5, y: 0.5 }}
       rotation={rotation}
     />
   )

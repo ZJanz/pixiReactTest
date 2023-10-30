@@ -59,7 +59,8 @@ function startServer() {
         [0, 0, 0, 0, 0]
       ],
       playersOnShip: [0],
-      speed: 0.1
+      speed: 0.1,
+      type:"ship"
     }],
     bulletArray: [
     //   {
@@ -75,6 +76,8 @@ function startServer() {
   gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0);
 
   let gameSpace = d3Quadtree.quadtree(gameState.shipArray, d => d.x, d => d.y);
+  gameSpace.addAll(gameState.bulletArray);
+
 
   function update() {
     const lastTimestamp = gameState.t;
@@ -121,9 +124,13 @@ function startServer() {
 
       io.to(player.id).emit("gameState", gameState);
     }
-
+//////
     for (let i = gameState.bulletArray.length-1; i >= 0; i--) {
       gameSpace.remove(gameState.bulletArray[i]);
+      if(Date.now() - gameState.bulletArray[i].dateOfBirth > 11000){
+        gameState.bulletArray.splice(i, 1)
+        return
+      }
 
       gameState.bulletArray[i].x += (gameState.bulletArray[i].velocityX * delta);
       gameState.bulletArray[i].y += (gameState.bulletArray[i].velocityY * delta);
@@ -134,17 +141,20 @@ function startServer() {
           do {
             const otherShip = node.data;
             const distance = Math.sqrt((otherShip.x - gameState.bulletArray[i].x) ** 2 + (otherShip.y - gameState.bulletArray[i].y) ** 2);
-            if (distance < 64*5/2+8 && otherShip !== gameState.shipArray[i]) {
+            if (distance < 64*5/1.5+8 && otherShip !== gameState.bulletArray[i]) {
               nearbyShips.push(otherShip);
             }
           } while (node = node.next);
         }
-        return x1 > gameState.bulletArray[i].x + 8 || x2 < gameState.bulletArray[i].x - 8 || y1 > gameState.bulletArray[i].y + 8 || y2 < gameState.bulletArray[i].y - 8;
+        return x1 > gameState.bulletArray[i].x + 64*5/1.5+8 || x2 < gameState.bulletArray[i].x - 64*5/1.5+8 || y1 > gameState.bulletArray[i].y + 64*5/1.5+8 || y2 < gameState.bulletArray[i].y - 64*5/1.5+8;
       });
 
       nearbyShips.forEach(otherShip => {
+        //element not in bullets to filter them
+        if(otherShip.speed === undefined){return}
         const distance = Math.sqrt((otherShip.x - gameState.bulletArray[i].x) ** 2 + (otherShip.y - gameState.bulletArray[i].y) ** 2);
-        if (distance < 64*5/2+8) {
+        if (distance < 64*5/1.5+8) {
+          console.log(otherShip)
           console.log("Collision bullet");
           // Perform collision handling here...
           // for (let y = 0; y < gameState.shipArray[i].shipRooms.length; y++){
@@ -187,7 +197,7 @@ function startServer() {
           do {
             const otherShip = node.data;
             const distance = Math.sqrt((otherShip.x - gameState.shipArray[i].x) ** 2 + (otherShip.y - gameState.shipArray[i].y) ** 2);
-            if (distance < 64*5 && otherShip !== gameState.shipArray[i]) {
+            if (distance < 64*5 && otherShip !== gameState.shipArray[i] && otherShip.type != 1) {
               nearbyShips.push(otherShip);
             }
           } while (node = node.next);
@@ -249,11 +259,11 @@ function startServer() {
         rotation: 0,
         speed:0.1,
         shipRooms: [
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0],
-          [1, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0],
-          [0, 0, 0, 0, 0]
+          [1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1],
+          [1, 1, 1, 1, 1]
         ],
         playersOnShip:[gameState.playerArray.length-1]
       
@@ -316,18 +326,23 @@ function startServer() {
         return
       }
       if(gameState.playerArray[playerArrayPosition].mode === 1){
-        gameState.bulletArray.push({
+        const newBullet = {
           
-          dateOfBirth: Date.now(),
-          x: gameState.shipArray[shipArrayPosition].x,
-          y: gameState.shipArray[shipArrayPosition].y,
-          velocityX: gameState.shipArray[shipArrayPosition].velocityX,
-          velocityY: gameState.shipArray[shipArrayPosition].velocityY,
-          rotation: gameState.shipArray[shipArrayPosition].rotation
           
-        })
+            dateOfBirth: Date.now(),
+            x: gameState.shipArray[shipArrayPosition].x +0,
+            y: gameState.shipArray[shipArrayPosition].y +0,
+            velocityX: gameState.shipArray[shipArrayPosition].velocityX,
+            velocityY: gameState.shipArray[shipArrayPosition].velocityY,
+            rotation: gameState.shipArray[shipArrayPosition].rotation,
+            type:1,
+          
+
+        }
+        gameState.bulletArray.push(newBullet)
         
-  
+        gameSpace.add(newBullet); 
+        
         return
       }
     })
