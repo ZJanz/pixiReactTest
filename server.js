@@ -143,8 +143,6 @@ function startServer() {
       const roomSize = 64;
       let roomType = 0;
       roomType = ship.shipRooms[player.insideRoomY][player.insideRoomX];
-      console.log(player.insideRoomX + " " + player.insideRoomY);
-      console.log(roomType);
 
       // Store initial player position
       const beforePlayerX = player.x;
@@ -213,12 +211,30 @@ function startServer() {
         // Check for collisions in the X-axis, allowing movement through the gap
         if ((newRoomPlayerX < -32 || newRoomPlayerX > 32) && !(newRoomPlayerY > -gapWidthY && newRoomPlayerY < gapWidthY)) {
             player.x = beforePlayerX; // Revert X position
+            newRoomPlayerX = beforePlayerX
         }
     
         // Check for collisions in the Y-axis
         if ((newRoomPlayerY < -32 || newRoomPlayerY > 32) && !(newRoomPlayerX > -gapWidthX && newRoomPlayerX < gapWidthX)) {
             player.y = beforePlayerY; // Revert Y position
+            newRoomPlayerY = beforePlayerY
         }
+
+        
+
+        const roomX = Math.floor((player.x+32 + (ship.shipRooms[0].length * roomSize) / 2) / roomSize)-3;
+        const roomY = Math.floor((player.y+32 + (ship.shipRooms.length * roomSize) / 2) / roomSize)-3;
+        console.log(roomX + " " + roomY)
+        const enteringRoom = ship.shipRooms[roomY][roomX];
+        if(enteringRoom === 0 || enteringRoom === 4 || enteringRoom === 3){
+          player.x = beforePlayerX; // Revert X position
+          player.y = beforePlayerY; // Revert Y position
+        } else {
+          player.insideRoomX = roomX;
+          player.insideRoomY = roomY;
+
+        }
+
     }
 
       io.to(player.id).emit("gameState", gameState);
@@ -318,7 +334,7 @@ function startServer() {
       nearbyShips.forEach(otherShip => {
         const distance = Math.sqrt((otherShip.x - gameState.shipArray[i].x) ** 2 + (otherShip.y - gameState.shipArray[i].y) ** 2);
         if (distance < 64*5) {
-          console.log("Collision");
+
           // Perform collision handling here...
           for (let y = 0; y < gameState.shipArray[i].shipRooms.length; y++){
             for (let x = 0; x < gameState.shipArray[i].shipRooms[y].length; x++){
