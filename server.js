@@ -87,36 +87,38 @@ function startServer() {
   let gameSpace = d3Quadtree.quadtree(gameState.shipArray, d => d.x, d => d.y);
   gameSpace.addAll(gameState.bulletArray);
 
-  function determineHitRoom(ship, bulletX, bulletY){
-      const rotation = ship.rotation;
+  function determineHitRoom(ship, bulletX, bulletY) {
+    const rotation = ship.rotation;
 
-      // Adjust the bullet's position relative to the ship's position
+    // Adjust the bullet's position relative to the ship's position
     const adjustedBulletX = bulletX - ship.x;
     const adjustedBulletY = bulletY - ship.y;
 
     // Adjust for ship rotation (rotate the hit point back)
-    const rotatedBulletX =
-        adjustedBulletX * Math.cos(-rotation) - adjustedBulletY * Math.sin(-rotation);
-    const rotatedBulletY =
-        adjustedBulletX * Math.sin(-rotation) + adjustedBulletY * Math.cos(-rotation);
+    const cosRotation = Math.cos(rotation);
+    const sinRotation = Math.sin(rotation);
 
-    // Calculate the actual coordinates based on ship's room size
+    // Calculate the hit point after ship rotation
+    const rotatedBulletX =
+        adjustedBulletX * cosRotation + adjustedBulletY * sinRotation;
+    const rotatedBulletY =
+        adjustedBulletY * cosRotation - adjustedBulletX * sinRotation;
+
+    // Calculate the room coordinates based on the room size
     const roomSize = 64; // Size of each room
     const roomArray = ship.shipRooms;
 
-    const roomX = Math.floor(rotatedBulletX / roomSize)+3;
-    const roomY = Math.floor(rotatedBulletY / roomSize)+3;
-      console.log(roomX+3)
-      console.log(roomY+3)
-      // Check if the room is a valid room that can be collided with (room with a '1' in the shipRooms array)
-      if (roomArray[roomY] && roomArray[roomY][roomX] === 1) {
-          // The bullet hit a valid room
-          return { roomX, roomY };
-      } else {
-          // The bullet hit an empty space or a non-collidable room
-          return null;
-      }
-  }
+    // Adjust the hit coordinates according to room size and offset
+    const roomX = Math.floor((rotatedBulletX + ship.shipRooms[0].length * roomSize / 2) / roomSize);
+    const roomY = Math.floor((rotatedBulletY + ship.shipRooms.length * roomSize / 2) / roomSize);
+
+    // Check for collision with valid rooms
+    if (roomArray[roomY] && roomArray[roomY][roomX] === 1) {
+        return { roomX, roomY }; // The bullet hit a valid room
+    } else {
+        return null; // The bullet hit an empty space or a non-collidable room
+    }
+}
 
 
   function update() {
