@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 const cors = require("cors");
+const { constrainedMemory } = require('process');
 app.use(cors());
 
 let d3Quadtree;
@@ -66,7 +67,8 @@ function startServer() {
       playersOnShip: [0],
       speed: 0.1,
       type:"ship",
-        weaponLocations:[{
+      roomDamage:{},
+      weaponLocations:[{
             x:4,
             y:2
           },
@@ -224,7 +226,46 @@ function startServer() {
 
         const roomX = Math.floor((player.x+32 + (ship.shipRooms[0].length * roomSize) / 2) / roomSize)-3;
         const roomY = Math.floor((player.y+32 + (ship.shipRooms.length * roomSize) / 2) / roomSize)-3;
-        console.log(roomX + " " + roomY)
+        if(!(roomX<0 || roomX>4 || roomY<0 || roomY>4)){
+          const enteringRoom = ship.shipRooms[roomY][roomX];
+          if(enteringRoom === 0 || enteringRoom === 4 || enteringRoom === 3){
+            player.x = beforePlayerX; // Revert X position
+            player.y = beforePlayerY; // Revert Y position
+          } else {
+            player.insideRoomX = roomX;
+            player.insideRoomY = roomY;
+
+          }
+        } else{
+            player.x = beforePlayerX; // Revert X position
+            player.y = beforePlayerY;
+        }
+
+    }
+
+    if (roomType === 2) {
+
+
+      const gapWidthX = 6; // Assuming the gap in X-axis is 6 units wide
+      const gapWidthY = 6; 
+  
+      // Check for collisions in the X-axis, allowing movement through the gap
+      if ((newRoomPlayerX < -32 || newRoomPlayerX > 32) && !(newRoomPlayerY > -gapWidthY && newRoomPlayerY < gapWidthY)) {
+          player.x = beforePlayerX; // Revert X position
+          newRoomPlayerX = beforePlayerX
+      }
+  
+      // Check for collisions in the Y-axis
+      if ((newRoomPlayerY < -32 || newRoomPlayerY > 32) && !(newRoomPlayerX > -gapWidthX && newRoomPlayerX < gapWidthX)) {
+          player.y = beforePlayerY; // Revert Y position
+          newRoomPlayerY = beforePlayerY
+      }
+
+
+
+      const roomX = Math.floor((player.x+32 + (ship.shipRooms[0].length * roomSize) / 2) / roomSize)-3;
+      const roomY = Math.floor((player.y+32 + (ship.shipRooms.length * roomSize) / 2) / roomSize)-3;
+      if(!(roomX<0 || roomX>4 || roomY<0 || roomY>4)){
         const enteringRoom = ship.shipRooms[roomY][roomX];
         if(enteringRoom === 0 || enteringRoom === 4 || enteringRoom === 3){
           player.x = beforePlayerX; // Revert X position
@@ -234,7 +275,11 @@ function startServer() {
           player.insideRoomY = roomY;
 
         }
-
+      } else{
+        player.x = beforePlayerX; // Revert X position
+        player.y = beforePlayerY;
+      }
+      
     }
 
       io.to(player.id).emit("gameState", gameState);
@@ -244,9 +289,8 @@ function startServer() {
       gameSpace.remove(gameState.bulletArray[i]);
       if(Date.now() - gameState.bulletArray[i].dateOfBirth > 1000){
         gameState.bulletArray.splice(i, 1)
-        return  
+        continue  
       }
-
       gameState.bulletArray[i].x += (gameState.bulletArray[i].velocityX * delta);
       gameState.bulletArray[i].y += (gameState.bulletArray[i].velocityY * delta);
 
@@ -266,7 +310,8 @@ function startServer() {
 
       nearbyShips.forEach(otherShip => {
         //element not in bullets to filter them
-        if(otherShip.speed === undefined){return}
+      
+        if(otherShip.speed === undefined || gameState.bulletArray[i]===undefined){return}
         const distance = Math.sqrt((otherShip.x - gameState.bulletArray[i].x) ** 2 + (otherShip.y - gameState.bulletArray[i].y) ** 2);
         if (distance < 64*5/1.5+8) {
           // console.log(otherShip)
@@ -276,7 +321,16 @@ function startServer() {
           const hitRoom = determineHitRoom(otherShip, gameState.bulletArray[i].x, gameState.bulletArray[i].y);
           if (hitRoom) {
               console.log(`The bullet hit room at (${hitRoom.roomX}, ${hitRoom.roomY}).`);
-              gameState.shipArray[otherShip.id].shipRooms[hitRoom.roomY][hitRoom.roomX] = 0;
+              if(gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`] === undefined){
+                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`]={health:90}
+              } else{
+                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].health -= 10;
+                if(gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].health <= 0){
+                  gameState.shipArray[otherShip.id].shipRooms[hitRoom.roomY][hitRoom.roomX] = 0;
+                }
+              }
+              
+
               gameState.bulletArray.splice(i, 1)
 
           } else {
@@ -389,13 +443,16 @@ function startServer() {
         speed:0.1,
         shipRooms: [
           [0, 0, 0, 0, 0],
-          [3, 1, 1, 4, 0],
-          [3, 1, 1, 2, 0],
+          [3, 1, 4, 0, 0],
+          [1, 1, 1, 2, 0],
           [3, 1, 1, 4, 0],
           [0, 0, 0, 0, 0]
         ],
+        roomDamage:{
+
+        },
         weaponLocations:[{
-            x:4,
+            x:3,
             y:2
           },
           {
