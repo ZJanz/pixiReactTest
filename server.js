@@ -355,13 +355,14 @@ function startServer() {
           if (hitRoom) {
               console.log(`The bullet hit room at (${hitRoom.roomX}, ${hitRoom.roomY}).`);
               if(gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`] === undefined){
-                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`]={health:100, onFire : 0}
+                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`]={health:100, onFire : 0, x:hitRoom.roomX, y:hitRoom.roomY}
               } 
 
               if(Math.random()<0.5 && gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].onFire < 100){
                 gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].onFire += 10;
                 if(gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].onFire > 100){
                   gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].onFire = 100
+                  
                 }
               }
               gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].health -= 10;
@@ -410,6 +411,19 @@ function startServer() {
       gameState.shipArray[i].x += (gameState.shipArray[i].velocityX * delta);
       gameState.shipArray[i].y += (gameState.shipArray[i].velocityY * delta);
 
+      for (let roomXY in gameState.shipArray[i].roomDamage) {
+        if(gameState.shipArray[i].roomDamage[roomXY].onFire > 0){
+          gameState.shipArray[i].roomDamage[roomXY].onFire += (0.5 * delta)
+          if(gameState.shipArray[i].roomDamage[roomXY].onFire >= 100){
+            gameState.shipArray[i].roomDamage[roomXY].onFire = 100;
+            fireSpread(gameState.shipArray[i].roomDamage[roomXY].x, gameState.shipArray[i].roomDamage[roomXY].y, i)
+            
+
+          }
+        }
+      }
+
+
       // Perform collision logic...
 
       const nearbyShips = [];
@@ -440,6 +454,43 @@ function startServer() {
         }
       })
       
+
+    }
+  }
+
+  function fireSpread(x, y, shipId){
+    let roomCheckX = 1
+    let roomCheckY = 0
+    if((gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 1 || gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 2)){
+      if(gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]===undefined){
+        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY}
+      }
+      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 1
+
+    }
+    roomCheckX = -1
+    if((gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 1 || gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 2)){
+      if(gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]===undefined){
+        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY}
+      }
+      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 1
+
+    }
+    roomCheckX = 0
+    roomCheckY = 1
+    if((gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 1 || gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 2)){
+      if(gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]===undefined){
+        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY}
+      }
+      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 1
+
+    }
+    roomCheckY = -1
+    if((gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 1 || gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 2)){
+      if(gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]===undefined){
+        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY}
+      }
+      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 1
 
     }
   }
@@ -613,7 +664,6 @@ function startServer() {
     socket.on('stopMovement', (data) => {
       console.log('Received movement key:', data.key);
       const playerArrayPosition = gameState.playerIDToIndex.get(socket.id);
-      console.log(playerArrayPosition)
       if(playerArrayPosition === undefined){return}
       const ship = gameState.playerArray[playerArrayPosition].insideShip
       if(data.key === 'w'){
