@@ -57,6 +57,12 @@ function Ship({ x, y, rotation, ship, playerArray }){
             y={shipRoomY * 64}
           />
           )}
+          {ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`] != undefined && ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].onFire === true&&(
+          <Fire
+            x={shipRoomIndex * 64}
+            y={shipRoomY * 64}
+          />
+          )}
         </>
       ))}
         {ship.playersOnShip && ship.playersOnShip.map((player, index) => (
@@ -77,6 +83,18 @@ function WeaponPossibly({x, y}){
   return (
     <Sprite
       image={'/weaponIGuess.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />
+  );
+
+}
+
+function Fire({x, y}){
+  return (
+    <Sprite
+      image={'/fire.png'}
       x={x}
       y={y}
       anchor={{ x: 0, y: 0 }}

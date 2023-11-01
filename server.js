@@ -30,54 +30,58 @@ function startServer() {
 
   let gameState = {
     t: Date.now(),
-    playerArray: [{
-      rotation: 0,
-      x: 5,
-      y: 5,
-      velocityX: 0,
-      velocityY: 0,
-      id: "AhzgAtklgo2FJvwWAADO",
-      hp: 100,
-      insideShip:0,
-      controllingShip:0,
-      direction: 0,
-      insideRoomX: 3,
-      insideRoomY: 3
-    }],
+    playerArray: [
+      // {
+    //   rotation: 0,
+    //   x: 5,
+    //   y: 5,
+    //   velocityX: 0,
+    //   velocityY: 0,
+    //   id: "AhzgAtklgo2FJvwWAADO",
+    //   hp: 100,
+    //   insideShip:0,
+    //   controllingShip:0,
+    //   direction: 0,
+    //   insideRoomX: 3,
+    //   insideRoomY: 3
+    // }
+  ],
     playerIDToIndex: new Map(),
-    shipArray: [{
-      id: 0,
-      alive: true,
-      controledBy: 0,
-      rotation: 0,
-      x: 0,
-      y: 0,
-      velocityX: 0,
-      velocityY: 0,
-      moveForward: false,
-      rotationVelocity: 0,
-      rotation: 0,
-      shipRooms: [
-        [0, 0, 0, 0, 0],
-        [3, 1, 1, 4, 0],
-        [3, 1, 1, 2, 0],
-        [3, 1, 1, 4, 0],
-        [0, 0, 0, 0, 0]
-      ],
-      playersOnShip: [0],
-      speed: 0.1,
-      type:"ship",
-      roomDamage:{},
-      weaponLocations:[{
-            x:4,
-            y:2
-          },
-          {
-            x:4,
-            y:4
-          }
-        ],
-    }],
+    shipArray: [
+      // {
+    //   id: 0,
+    //   alive: true,
+    //   controledBy: 0,
+    //   rotation: 0,
+    //   x: 0,
+    //   y: 0,
+    //   velocityX: 0,
+    //   velocityY: 0,
+    //   moveForward: false,
+    //   rotationVelocity: 0,
+    //   rotation: 0,
+    //   shipRooms: [
+    //     [0, 0, 0, 0, 0],
+    //     [3, 1, 1, 4, 0],
+    //     [3, 1, 1, 2, 0],
+    //     [3, 1, 1, 4, 0],
+    //     [0, 0, 0, 0, 0]
+    //   ],
+    //   playersOnShip: [0],
+    //   speed: 0.1,
+    //   type:"ship",
+    //   roomDamage:{},
+    //   weaponLocations:[{
+    //         x:4,
+    //         y:2
+    //       },
+    //       {
+    //         x:4,
+    //         y:4
+    //       }
+    //     ],
+    // }
+  ],
     bulletArray: [
     //   {
     //   dateOfBirth: Date.now(),
@@ -89,7 +93,7 @@ function startServer() {
     // }
   ]
   };
-  gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0);
+  // gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0);
 
   let gameSpace = d3Quadtree.quadtree(gameState.shipArray, d => d.x, d => d.y);
   gameSpace.addAll(gameState.bulletArray);
@@ -132,6 +136,7 @@ function startServer() {
     const lastTimestamp = gameState.t;
     gameState.t = Date.now();
     const delta = (gameState.t - lastTimestamp) / 16;
+    
 
     gameSpace = d3Quadtree.quadtree(gameState.shipArray, d => d.x, d => d.y);
 
@@ -142,6 +147,9 @@ function startServer() {
     for (let i = 0; i < gameState.playerArray.length; i++) {
       let player = gameState.playerArray[i];
       let ship = gameState.shipArray[player.insideShip];
+      
+
+
       const roomSize = 64;
       let roomType = 0;
       roomType = ship.shipRooms[player.insideRoomY][player.insideRoomX];
@@ -282,6 +290,31 @@ function startServer() {
       
     }
 
+      // Calculate position based on the ship the player is inside
+      const referenceX = ship.x;
+      const referenceY = ship.y;
+      const nearbyObjects = [];
+      gameSpace.visit(function (node, x1, y1, x2, y2) {
+        if (!node.length) {
+          do {
+            const otherShip = node.data;
+            const distance = Math.sqrt((otherShip.x - referenceX) ** 2 + (otherShip.y - referenceY) ** 2);
+            if (distance <= 2000) {
+              nearbyObjects.push(otherShip);
+            }
+          } while (node = node.next);
+        }
+        return x1 > referenceX + 2000 || x2 < referenceX - 2000 || y1 > referenceY + 2000 || y2 < referenceY - 2000;
+      });
+
+      const gameStateForPlayer = {
+        t: gameState.t,
+        playerArray: [gameState.playerArray],
+        shipArray: nearbyObjects,
+        playerIDToIndex: gameState.playerIDToIndex,
+        bulletArray: gameState.bulletArray
+      };
+
       io.to(player.id).emit("gameState", gameState);
     }
 //////
@@ -322,13 +355,17 @@ function startServer() {
           if (hitRoom) {
               console.log(`The bullet hit room at (${hitRoom.roomX}, ${hitRoom.roomY}).`);
               if(gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`] === undefined){
-                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`]={health:90}
-              } else{
-                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].health -= 10;
-                if(gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].health <= 0){
-                  gameState.shipArray[otherShip.id].shipRooms[hitRoom.roomY][hitRoom.roomX] = 0;
-                }
+                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`]={health:100}
+              } 
+
+              if(Math.random()<0.5){
+                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].onFire = true;
               }
+              gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].health -= 10;
+              if(gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].health <= 0){
+                gameState.shipArray[otherShip.id].shipRooms[hitRoom.roomY][hitRoom.roomX] = 0;
+              }
+              
               
 
               gameState.bulletArray.splice(i, 1)
