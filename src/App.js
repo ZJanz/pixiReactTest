@@ -57,10 +57,11 @@ function Ship({ x, y, rotation, ship, playerArray }){
             y={shipRoomY * 64}
           />
           )}
-          {ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`] != undefined && ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].onFire === true&&(
+          {ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`] != undefined && ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].onFire > 0&&(
           <Fire
             x={shipRoomIndex * 64}
             y={shipRoomY * 64}
+            onFire={ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].onFire}
           />
           )}
         </>
@@ -91,12 +92,22 @@ function WeaponPossibly({x, y}){
 
 }
 
-function Fire({x, y}){
+function Fire({x, y, onFire }){
+  const scaleFactor = 0.1 + onFire / 200; // Adjust the scaling factor as needed
+  const scale = { x: scaleFactor, y: scaleFactor };
+  const roomCenterX = x + 32;
+  const roomCenterY = y + 32;
+
+  const xAdjust = roomCenterX - (32 * scaleFactor);
+  const yAdjust = roomCenterY - (32 * scaleFactor);
+
+
   return (
     <Sprite
+      scale = {scale}
       image={'/fire.png'}
-      x={x}
-      y={y}
+      x={xAdjust}
+      y={yAdjust}
       anchor={{ x: 0, y: 0 }}
     />
   );
