@@ -347,8 +347,6 @@ function startServer() {
         if(otherShip.speed === undefined || gameState.bulletArray[i]===undefined){return}
         const distance = Math.sqrt((otherShip.x - gameState.bulletArray[i].x) ** 2 + (otherShip.y - gameState.bulletArray[i].y) ** 2);
         if (distance < 64*5/1.5+8) {
-          // console.log(otherShip)
-          // console.log("Collision bullet");
           
 
           const hitRoom = determineHitRoom(otherShip, gameState.bulletArray[i].x, gameState.bulletArray[i].y);
@@ -411,8 +409,21 @@ function startServer() {
       gameState.shipArray[i].y += (gameState.shipArray[i].velocityY * delta);
 
       for (let roomXY in gameState.shipArray[i].roomDamage) {
+        const roomX = gameState.shipArray[i].roomDamage[roomXY].x
+        const roomY = gameState.shipArray[i].roomDamage[roomXY].y
+
         if(gameState.shipArray[i].roomDamage[roomXY].onFire > 0){
-          gameState.shipArray[i].roomDamage[roomXY].onFire += (0.5 * delta)
+          gameState.shipArray[i].roomDamage[roomXY].onFire += (0.1 * delta)
+          for(let p = 0; p < gameState.shipArray[i].playersOnShip.length; p++){
+            
+            const playerID = gameState.shipArray[i].playersOnShip[p]
+            const player = gameState.playerArray[playerID]
+            if(player.insideRoomX === roomX && player.insideRoomY === roomY){
+              gameState.shipArray[i].roomDamage[roomXY].onFire -= (0.3 * delta)
+              gameState.playerArray[playerID].hp -= (10*delta)
+              checkPlayerHealth(playerID)
+            }
+          }
           if(gameState.shipArray[i].roomDamage[roomXY].onFire >= 100){
             gameState.shipArray[i].roomDamage[roomXY].onFire = 100;
             fireSpread(gameState.shipArray[i].roomDamage[roomXY].x, gameState.shipArray[i].roomDamage[roomXY].y, i)
@@ -456,6 +467,26 @@ function startServer() {
       //   }
       // })
       
+
+    }
+  }
+
+  function checkPlayerHealth(playerID){
+    if(gameState.playerArray[playerID].hp<= 0){
+      const shipIdDiedIn = gameState.playerArray[playerID].insideShip
+      gameState.playerArray[playerID].x = 64*5/2
+      gameState.playerArray[playerID].y = 64*5/2
+
+      gameState.playerArray[playerID].insideShip = 0
+      gameState.playerArray[playerID].insideRoomX = 2
+      gameState.playerArray[playerID].insideRoomY = 2
+      gameState.playerArray[playerID].hp = 100
+      
+      console.log(gameState.shipArray[0].playersOnShip)
+
+      gameState.shipArray[shipIdDiedIn].playersOnShip = gameState.shipArray[shipIdDiedIn].playersOnShip.filter(players => players !== playerID);
+      gameState.shipArray[0].playersOnShip.push(playerID)
+      console.log(gameState.shipArray[0].playersOnShip)
 
     }
   }
