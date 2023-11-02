@@ -367,8 +367,7 @@ function startServer() {
               }
               gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].health -= 10;
               if(gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].health <= 0){
-                gameState.shipArray[otherShip.id].shipRooms[hitRoom.roomY][hitRoom.roomX] = 0;
-                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].onFire = 0;
+                destroyRoom(hitRoom.roomX, hitRoom.roomY, otherShip.id)
               }
               
               
@@ -417,7 +416,10 @@ function startServer() {
           if(gameState.shipArray[i].roomDamage[roomXY].onFire >= 100){
             gameState.shipArray[i].roomDamage[roomXY].onFire = 100;
             fireSpread(gameState.shipArray[i].roomDamage[roomXY].x, gameState.shipArray[i].roomDamage[roomXY].y, i)
-            
+            gameState.shipArray[i].roomDamage[roomXY].health -= 0.05
+            if(gameState.shipArray[i].roomDamage[roomXY].health<=0){
+              destroyRoom(gameState.shipArray[i].roomDamage[roomXY].x, gameState.shipArray[i].roomDamage[roomXY].y, i)
+            }
 
           }
         }
@@ -426,36 +428,42 @@ function startServer() {
 
       // Perform collision logic...
 
-      const nearbyShips = [];
-      gameSpace.visit(function(node, x1, y1, x2, y2) {
-        if (!node.length) {
-          do {
-            const otherShip = node.data;
-            const distance = Math.sqrt((otherShip.x - gameState.shipArray[i].x) ** 2 + (otherShip.y - gameState.shipArray[i].y) ** 2);
-            if (distance < 64*5 && otherShip !== gameState.shipArray[i] && otherShip.type != 1) {
-              nearbyShips.push(otherShip);
-            }
-          } while (node = node.next);
-        }
-        return x1 > gameState.shipArray[i].x + 64*5 || x2 < gameState.shipArray[i].x - 64*5 || y1 > gameState.shipArray[i].y + 64*5 || y2 < gameState.shipArray[i].y - 64*5;
-      });
+      // const nearbyShips = [];
+      // gameSpace.visit(function(node, x1, y1, x2, y2) {
+      //   if (!node.length) {
+      //     do {
+      //       const otherShip = node.data;
+      //       const distance = Math.sqrt((otherShip.x - gameState.shipArray[i].x) ** 2 + (otherShip.y - gameState.shipArray[i].y) ** 2);
+      //       if (distance < 64*5 && otherShip !== gameState.shipArray[i] && otherShip.type != 1) {
+      //         nearbyShips.push(otherShip);
+      //       }
+      //     } while (node = node.next);
+      //   }
+      //   return x1 > gameState.shipArray[i].x + 64*5 || x2 < gameState.shipArray[i].x - 64*5 || y1 > gameState.shipArray[i].y + 64*5 || y2 < gameState.shipArray[i].y - 64*5;
+      // });
 
-      nearbyShips.forEach(otherShip => {
-        const distance = Math.sqrt((otherShip.x - gameState.shipArray[i].x) ** 2 + (otherShip.y - gameState.shipArray[i].y) ** 2);
-        if (distance < 64*5) {
+      // nearbyShips.forEach(otherShip => {
+      //   const distance = Math.sqrt((otherShip.x - gameState.shipArray[i].x) ** 2 + (otherShip.y - gameState.shipArray[i].y) ** 2);
+      //   if (distance < 64*5) {
 
-          // Perform collision handling here...
-          for (let y = 0; y < gameState.shipArray[i].shipRooms.length; y++){
-            for (let x = 0; x < gameState.shipArray[i].shipRooms[y].length; x++){
-              const room = gameState.shipArray[i].shipRooms[y][x]
-            }
+      //     // Perform collision handling here...
+      //     for (let y = 0; y < gameState.shipArray[i].shipRooms.length; y++){
+      //       for (let x = 0; x < gameState.shipArray[i].shipRooms[y].length; x++){
+      //         const room = gameState.shipArray[i].shipRooms[y][x]
+      //       }
 
-          }
-        }
-      })
+      //     }
+      //   }
+      // })
       
 
     }
+  }
+
+  function destroyRoom(x, y, shipId){
+    gameState.shipArray[shipId].shipRooms[y][x] = 0;
+    delete gameState.shipArray[shipId].roomDamage[`${x+','+y}`];
+
   }
 
   function fireSpread(x, y, shipId){
