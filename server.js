@@ -399,18 +399,23 @@ function startServer() {
     for (let i = 0; i < gameState.shipArray.length; i++) {
       // Remove ship from quadtree before position update
     gameSpace.remove(gameState.shipArray[i]);
+    const engineLocation = gameState.shipArray[i].engineLocation;
+      if(gameState.shipArray[i].roomDamage[`${(engineLocation.x+1)+','+(engineLocation.y)}`] === undefined || gameState.shipArray[i].roomDamage[`${(engineLocation.x+1)+','+(engineLocation.y)}`].health>70 ){
+        
+        if (gameState.shipArray[i].rotateLeft === true) {
+          gameState.shipArray[i].rotationVelocity = (gameState.shipArray[i].rotationVelocity - 0.01 * delta * gameState.shipArray[i].speed);
+        }
+        if (gameState.shipArray[i].rotateRight === true) {
+          gameState.shipArray[i].rotationVelocity = (gameState.shipArray[i].rotationVelocity + 0.01 * delta * gameState.shipArray[i].speed);
+        }
+        if (gameState.shipArray[i].moveForward === true) {
+          const angleInRadians = gameState.shipArray[i].rotation;
+          gameState.shipArray[i].velocityX += Math.cos(angleInRadians) * 1 * delta * gameState.shipArray[i].speed;
+          gameState.shipArray[i].velocityY += Math.sin(angleInRadians) * 1 * delta * gameState.shipArray[i].speed;
+        }
+      }
 
-      if (gameState.shipArray[i].rotateLeft === true) {
-        gameState.shipArray[i].rotationVelocity = (gameState.shipArray[i].rotationVelocity - 0.01 * delta * gameState.shipArray[i].speed);
-      }
-      if (gameState.shipArray[i].rotateRight === true) {
-        gameState.shipArray[i].rotationVelocity = (gameState.shipArray[i].rotationVelocity + 0.01 * delta * gameState.shipArray[i].speed);
-      }
-      if (gameState.shipArray[i].moveForward === true) {
-        const angleInRadians = gameState.shipArray[i].rotation;
-        gameState.shipArray[i].velocityX += Math.cos(angleInRadians) * 1 * delta * gameState.shipArray[i].speed;
-        gameState.shipArray[i].velocityY += Math.sin(angleInRadians) * 1 * delta * gameState.shipArray[i].speed;
-      }
+      
       gameState.shipArray[i].rotation += (gameState.shipArray[i].rotationVelocity * delta);
 
       gameState.shipArray[i].x += (gameState.shipArray[i].velocityX * delta);
@@ -595,6 +600,7 @@ function startServer() {
         ],
         roomDamage:{
         },
+        //Forgot to start at 0 for weapon locations
         weaponLocations:[{
             x:3,
             y:2
@@ -604,6 +610,11 @@ function startServer() {
             y:4
           }
         ],
+        engineLocation:
+        {
+          x:0,
+          y:3
+        },
         playersOnShip:[gameState.playerArray.length-1]
       
     })
@@ -670,8 +681,6 @@ function startServer() {
       for(let i = 0; i <gameState.shipArray[shipArrayPosition].weaponLocations.length; i++){
 
         const weaponLocation = gameState.shipArray[shipArrayPosition].weaponLocations[i];
-        console.log(weaponLocation.x-2)
-        console.log(gameState.shipArray[shipArrayPosition].roomDamage[`${(weaponLocation.x-2)+','+(weaponLocation.y-1)}`])
         if(gameState.shipArray[shipArrayPosition].roomDamage[`${(weaponLocation.x-2)+','+(weaponLocation.y-1)}`] != undefined &&gameState.shipArray[shipArrayPosition].roomDamage[`${(weaponLocation.x-2)+','+(weaponLocation.y-1)}`].health<70 ){
           continue
         }
