@@ -153,6 +153,12 @@ function startServer() {
       const roomSize = 64;
       let roomType = 0;
       roomType = ship.shipRooms[player.insideRoomY][player.insideRoomX];
+      if(ship.roomDamage[`${player.insideRoomX+','+player.insideRoomY}`]!=undefined &&ship.roomDamage[`${player.insideRoomX+','+player.insideRoomY}`].onFire<=0 ){
+        ship.roomDamage[`${player.insideRoomX+','+player.insideRoomY}`].health += 0.5*delta
+        if(ship.roomDamage[`${player.insideRoomX+','+player.insideRoomY}`].health>=100){
+          delete ship.roomDamage[`${player.insideRoomX+','+player.insideRoomY}`]
+        }
+      }
 
       // Store initial player position
       const beforePlayerX = player.x;
