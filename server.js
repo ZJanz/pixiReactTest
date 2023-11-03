@@ -355,7 +355,7 @@ function startServer() {
               const roomType =gameState.shipArray[otherShip.id].shipRooms[hitRoom.roomY][hitRoom.roomX]
               console.log(`The bullet hit room at (${hitRoom.roomX}, ${hitRoom.roomY}).`);
               if(gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`] === undefined){
-                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`]={health:100, onFire : 0, x:hitRoom.roomX, y:hitRoom.roomY, roomType, roomType}
+                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`]={health:100, onFire : 0, x:hitRoom.roomX, y:hitRoom.roomY, roomType: roomType}
               } 
 
               if(Math.random()<0.5 && gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].onFire < 100){
@@ -664,7 +664,11 @@ function startServer() {
       for(let i = 0; i <gameState.shipArray[shipArrayPosition].weaponLocations.length; i++){
 
         const weaponLocation = gameState.shipArray[shipArrayPosition].weaponLocations[i];
-
+        console.log(weaponLocation.x-2)
+        console.log(gameState.shipArray[shipArrayPosition].roomDamage[`${(weaponLocation.x-2)+','+(weaponLocation.y-1)}`])
+        if(gameState.shipArray[shipArrayPosition].roomDamage[`${(weaponLocation.x-2)+','+(weaponLocation.y-1)}`] != undefined &&gameState.shipArray[shipArrayPosition].roomDamage[`${(weaponLocation.x-2)+','+(weaponLocation.y-1)}`].health<70 ){
+          continue
+        }
         // Calculate the adjusted coordinates based on ship rotation
         const cosAngle = Math.cos(gameState.shipArray[shipArrayPosition].rotation);
         const sinAngle = Math.sin(gameState.shipArray[shipArrayPosition].rotation);
