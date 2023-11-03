@@ -62,9 +62,9 @@ function startServer() {
     //   rotation: 0,
     //   shipRooms: [
     //     [0, 0, 0, 0, 0],
-    //     [3, 1, 1, 4, 0],
-    //     [3, 1, 1, 2, 0],
-    //     [3, 1, 1, 4, 0],
+    //     [0, 1, 5, 4, 0],
+    //     [3, 6, 1, 2, 0],
+    //     [0, 1, 5, 4, 0],
     //     [0, 0, 0, 0, 0]
     //   ],
     //   playersOnShip: [0],
@@ -124,7 +124,7 @@ function startServer() {
     const roomY = Math.floor((rotatedBulletY + ship.shipRooms.length * roomSize / 2) / roomSize);
 
     // Check for collision with valid rooms
-    if (roomArray[roomY] && roomArray[roomY][roomX] === 1) {
+    if (roomArray[roomY] != undefined && damageAbleRooms(roomArray[roomY][roomX])) {
         return { roomX, roomY }; // The bullet hit a valid room
     } else {
         return null; // The bullet hit an empty space or a non-collidable room
@@ -213,7 +213,7 @@ function startServer() {
 
       
 
-      if (roomType === 1) {
+      if (roomType === 1 || roomType === 5 || roomType === 6 || roomType === 7) {
         // Define the gap dimensions
         const gapWidthX = 6; // Assuming the gap in X-axis is 6 units wide
         const gapWidthY = 6; 
@@ -348,12 +348,13 @@ function startServer() {
         const distance = Math.sqrt((otherShip.x - gameState.bulletArray[i].x) ** 2 + (otherShip.y - gameState.bulletArray[i].y) ** 2);
         if (distance < 64*5/1.5+8) {
           
-
+          
           const hitRoom = determineHitRoom(otherShip, gameState.bulletArray[i].x, gameState.bulletArray[i].y);
+          const roomType =gameState.shipArray[otherShip.id].roomArray[room.y][room.x]
           if (hitRoom) {
               console.log(`The bullet hit room at (${hitRoom.roomX}, ${hitRoom.roomY}).`);
               if(gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`] === undefined){
-                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`]={health:100, onFire : 0, x:hitRoom.roomX, y:hitRoom.roomY}
+                gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`]={health:100, onFire : 0, x:hitRoom.roomX, y:hitRoom.roomY, roomType, roomType}
               } 
 
               if(Math.random()<0.5 && gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`].onFire < 100){
@@ -420,13 +421,13 @@ function startServer() {
             const player = gameState.playerArray[playerID]
             if(player.insideRoomX === roomX && player.insideRoomY === roomY){
               gameState.shipArray[i].roomDamage[roomXY].onFire -= (0.3 * delta)
-              gameState.playerArray[playerID].hp -= (10*delta)
+              gameState.playerArray[playerID].hp -= (0.2*delta)
               checkPlayerHealth(playerID)
             }
           }
           if(gameState.shipArray[i].roomDamage[roomXY].onFire >= 100){
             gameState.shipArray[i].roomDamage[roomXY].onFire = 100;
-            fireSpread(gameState.shipArray[i].roomDamage[roomXY].x, gameState.shipArray[i].roomDamage[roomXY].y, i)
+            fireSpread(gameState.shipArray[i].roomDamage[roomXY].x, gameState.shipArray[i].roomDamage[roomXY].y, i, delta)
             gameState.shipArray[i].roomDamage[roomXY].health -= 0.05
             if(gameState.shipArray[i].roomDamage[roomXY].health<=0){
               destroyRoom(gameState.shipArray[i].roomDamage[roomXY].x, gameState.shipArray[i].roomDamage[roomXY].y, i)
@@ -497,39 +498,45 @@ function startServer() {
 
   }
 
-  function fireSpread(x, y, shipId){
+  function damageAbleRooms(room){
+    if(room===1||room===2||room===5||room===6){
+      return true
+    }
+  }
+
+  function fireSpread(x, y, shipId, delta){
     let roomCheckX = 1
     let roomCheckY = 0
-    if((gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 1 || gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 2)){
+    if(damageAbleRooms(gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX])){
       if(gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]===undefined){
-        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY}
+        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY, roomType:gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX]}
       }
-      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 1
+      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 0.05*delta
 
     }
     roomCheckX = -1
-    if((gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 1 || gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 2)){
+    if(damageAbleRooms(gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX])){
       if(gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]===undefined){
-        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY}
+        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY, roomType:gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX]}
       }
-      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 1
+      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 0.05*delta
 
     }
     roomCheckX = 0
     roomCheckY = 1
-    if((gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 1 || gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 2)){
+    if(damageAbleRooms(gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX])){
       if(gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]===undefined){
-        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY}
+        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY, roomType:gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX]}
       }
-      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 1
+      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 0.05*delta
 
     }
     roomCheckY = -1
-    if((gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 1 || gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX] === 2)){
+    if(damageAbleRooms(gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX])){
       if(gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]===undefined){
-        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY}
+        gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`]={health:100, onFire : 0, x:x+roomCheckX, y:y+roomCheckY, roomType:gameState.shipArray[shipId].shipRooms[y+roomCheckY][x+roomCheckX]}
       }
-      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 1
+      gameState.shipArray[shipId].roomDamage[`${(x+roomCheckX)+','+(y+roomCheckY)}`].onFire += 0.05*delta
 
     }
   }
@@ -574,9 +581,9 @@ function startServer() {
         speed:0.1,
         shipRooms: [
           [0, 0, 0, 0, 0],
-          [3, 1, 4, 0, 0],
+          [0, 5, 4, 0, 0],
           [1, 1, 1, 2, 0],
-          [3, 1, 1, 4, 0],
+          [3, 1, 5, 4, 0],
           [0, 0, 0, 0, 0]
         ],
         roomDamage:{

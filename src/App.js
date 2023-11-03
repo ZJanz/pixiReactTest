@@ -57,6 +57,20 @@ function Ship({ x, y, rotation, ship, playerArray }){
             y={shipRoomY * 64}
           />
           )}
+          {shipRoom === 5 &&  (ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`] === undefined || ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].health >= 100)&&(
+          <WeaponRoom
+            x={shipRoomIndex * 64}
+            y={shipRoomY * 64}
+            health = {100}
+          />
+          )}
+          {shipRoom === 5 && ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`]!=undefined &&(
+          <WeaponRoom
+            x={shipRoomIndex * 64}
+            y={shipRoomY * 64}
+            health = {ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].health}
+          />
+          )}
           {ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`] != undefined && ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].onFire > 0&&(
           <Fire
             x={shipRoomIndex * 64}
@@ -66,7 +80,7 @@ function Ship({ x, y, rotation, ship, playerArray }){
           )}
         </>
       ))}
-        {ship.playersOnShip && ship.playersOnShip.map((player, index) => (
+        {ship.playersOnShip.length>0 && ship.playersOnShip.map((player, index) => (
           <Player key={index} x={playerArray[player].x} y={playerArray[player].y} id={playerArray[player].id} />
         ))}
       </>
@@ -147,6 +161,35 @@ function Player({x, y}) {
   );
 }
 
+function WeaponRoom({x, y, health}){
+  return(
+    <>
+    <BasicRoom
+    x={x}
+    y={y}
+   />
+   {health >= 100 && <Sprite
+      image={'/weaponIcon.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />}
+    {health < 100 && health >= 70 && <Sprite
+      image={'/weaponIconDamaged.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />}
+    {health < 70 && <Sprite
+      image={'/weaponIconBroken.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />}
+    </>
+  )
+}
+
 function BasicRoom({ x, y }) {
   return (
     <Sprite
@@ -169,17 +212,17 @@ function PodRoom({ x, y }) {
   );
 }
 
-function renderShips(playerArray, shipArray, cameraX, cameraY) {
-  // return playerArray.map((player, index) => (
-  //   <Pod key={index} x={player.x - cameraX} y={player.y -cameraY} rotation={player.rotation} player={player} />
-  // )
+// function renderShips(playerArray, shipArray, cameraX, cameraY) {
+//   // return playerArray.map((player, index) => (
+//   //   <Pod key={index} x={player.x - cameraX} y={player.y -cameraY} rotation={player.rotation} player={player} />
+//   // )
   
-  return shipArray.map((player, index) => (
-    <Pod key={index} x={player.x - cameraX} y={player.y -cameraY} rotation={player.rotation} player={player} />
-  )
+//   return shipArray.map((player, index) => (
+//     <Pod key={index} x={player.x - cameraX} y={player.y -cameraY} rotation={player.rotation} player={player} />
+//   )
 
-  );
-}
+//   );
+// }
 
 function Pod({ x, y, rotation, player }) {
   return (
@@ -403,7 +446,7 @@ function Camera() {
     <>
       <GridBackground x={x} y={y} />
       
-      {renderShips(gameState.playerArray, gameState.playerArray, x, y)}
+      {/* {renderShips(gameState.playerArray, gameState.playerArray, x, y)} */}
       {renderActualShips(gameState.playerArray, gameState.shipArray, x, y)}
       {renderBullets(gameState.bulletArray, x, y)}
 
