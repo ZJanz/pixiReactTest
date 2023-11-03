@@ -71,6 +71,22 @@ function Ship({ x, y, rotation, ship, playerArray }){
             health = {ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].health}
           />
           )}
+           {shipRoom === 6 &&  (ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`] === undefined || ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].health >= 100)&&(
+          <EngineRoom
+            x={shipRoomIndex * 64}
+            y={shipRoomY * 64}
+            health = {100}
+          />
+          )}
+          {shipRoom === 6 && ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`]!=undefined &&(
+          <EngineRoom
+            x={shipRoomIndex * 64}
+            y={shipRoomY * 64}
+            health = {ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].health}
+          />
+          )}
+
+
           {ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`] != undefined && ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].onFire > 0&&(
           <Fire
             x={shipRoomIndex * 64}
@@ -182,6 +198,34 @@ function WeaponRoom({x, y, health}){
     />}
     {health < 70 && <Sprite
       image={'/weaponIconBroken.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />}
+    </>
+  )
+}
+function EngineRoom({x, y, health}){
+  return(
+    <>
+    <BasicRoom
+    x={x}
+    y={y}
+   />
+   {health >= 100 && <Sprite
+      image={'/engineRoomIcon.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />}
+    {health < 100 && health >= 70 && <Sprite
+      image={'/engineRoomIconDamaged.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />}
+    {health < 70 && <Sprite
+      image={'/engineRoomIconBroken.png'}
       x={x}
       y={y}
       anchor={{ x: 0, y: 0 }}
