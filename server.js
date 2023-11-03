@@ -350,8 +350,9 @@ function startServer() {
           
           
           const hitRoom = determineHitRoom(otherShip, gameState.bulletArray[i].x, gameState.bulletArray[i].y);
-          const roomType =gameState.shipArray[otherShip.id].roomArray[room.y][room.x]
+          
           if (hitRoom) {
+              const roomType =gameState.shipArray[otherShip.id].shipRooms[hitRoom.roomY][hitRoom.roomX]
               console.log(`The bullet hit room at (${hitRoom.roomX}, ${hitRoom.roomY}).`);
               if(gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`] === undefined){
                 gameState.shipArray[otherShip.id].roomDamage[`${hitRoom.roomX+','+hitRoom.roomY}`]={health:100, onFire : 0, x:hitRoom.roomX, y:hitRoom.roomY, roomType, roomType}
