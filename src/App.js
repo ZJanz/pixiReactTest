@@ -17,9 +17,10 @@ export default function App() {
   );
 }
 
-function renderActualShips(playerArray, shipArray, cameraX, cameraY){
-  // console.log(shipArray)
-  return shipArray.map((ship, index) => (
+function renderActualShips(playerArray, shipMap, cameraX, cameraY){
+
+  const shipValues = Object.values(shipMap);
+  return shipValues.map((ship, index) => (
     <Ship key={index} x={ship.x - cameraX} y={ship.y -cameraY} rotation={ship.rotation} ship={ship} playerArray={playerArray} />
   )
   );
@@ -375,7 +376,7 @@ function Camera() {
   const [gameState, setGameState] = useState({
     t: Date.now(),
     playerArray: [],
-    shipArray: [],
+    shipMap: {},
     bulletArray: []
   });
   const [serverState, setServerState] = useState(gameState)
@@ -402,8 +403,8 @@ function Camera() {
   
   useEffect(() => {
     if(gameState.playerArray[indexInPlayerArray] === undefined){return}
-    setX(gameState.shipArray[gameState.playerArray[indexInPlayerArray].insideShip].x - window.innerWidth/2)
-    setY(gameState.shipArray[gameState.playerArray[indexInPlayerArray].insideShip].y- window.innerHeight/2)
+    setX(gameState.shipMap[gameState.playerArray[indexInPlayerArray].insideShip].x - window.innerWidth/2)
+    setY(gameState.shipMap[gameState.playerArray[indexInPlayerArray].insideShip].y- window.innerHeight/2)
   }, [gameState]);
 
   useTick((delta) => {
@@ -528,13 +529,12 @@ function Camera() {
       socket.off('serverMessage');
     };
   }, [socket]);
-
   return (
     <>
       <GridBackground x={x} y={y} />
       
       {/* {renderShips(gameState.playerArray, gameState.playerArray, x, y)} */}
-      {renderActualShips(gameState.playerArray, gameState.shipArray, x, y)}
+      {renderActualShips(gameState.playerArray, gameState.shipMap, x, y)}
       {renderBullets(gameState.bulletArray, x, y)}
 
 
