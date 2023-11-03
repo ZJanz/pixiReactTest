@@ -511,7 +511,7 @@ function startServer() {
   }
 
   function damageAbleRooms(room){
-    if(room===1||room===2||room===5||room===6){
+    if(room===1||room===2||room===5||room===6||room===7){
       return true
     }
   }
@@ -594,7 +594,7 @@ function startServer() {
         shipRooms: [
           [0, 0, 0, 0, 0],
           [0, 5, 4, 0, 0],
-          [1, 1, 1, 2, 0],
+          [1, 1, 1, 7, 0],
           [3, 6, 5, 4, 0],
           [0, 0, 0, 0, 0]
         ],
@@ -614,6 +614,11 @@ function startServer() {
         {
           x:0,
           y:3
+        },
+        pilotRoomLocation:
+        {
+          x:3,
+          y:2
         },
         playersOnShip:[gameState.playerArray.length-1]
       
@@ -656,9 +661,14 @@ function startServer() {
     socket.on('interact', (data) => {
       const playerArrayPosition = gameState.playerIDToIndex.get(socket.id);
       const shipArrayPosition = gameState.playerArray[playerArrayPosition].insideShip;
+      const currentRoomX = gameState.playerArray[playerArrayPosition].insideRoomX
+      const currentRoomY = gameState.playerArray[playerArrayPosition].insideRoomY
       if(gameState.playerArray[playerArrayPosition].mode === 0){
-        gameState.playerArray[playerArrayPosition].mode = 1
-        gameState.shipArray[shipArrayPosition].controledBy = playerArrayPosition
+        if(currentRoomX===gameState.shipArray[shipArrayPosition].pilotRoomLocation.x && currentRoomY===gameState.shipArray[shipArrayPosition].pilotRoomLocation.y && (gameState.shipArray[shipArrayPosition].roomDamage[`${(currentRoomX)+','+(currentRoomY)}`]===undefined || gameState.shipArray[shipArrayPosition].roomDamage[`${(currentRoomX)+','+(currentRoomY)}`]>70)){
+          gameState.playerArray[playerArrayPosition].mode = 1
+          gameState.shipArray[shipArrayPosition].controledBy = playerArrayPosition
+        }
+        
         return
       }
       if(gameState.playerArray[playerArrayPosition].mode === 1){

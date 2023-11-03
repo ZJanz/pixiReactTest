@@ -85,6 +85,20 @@ function Ship({ x, y, rotation, ship, playerArray }){
             health = {ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].health}
           />
           )}
+          {shipRoom === 7 &&  (ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`] === undefined || ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].health >= 100)&&(
+          <PilotRoom
+            x={shipRoomIndex * 64}
+            y={shipRoomY * 64}
+            health = {100}
+          />
+          )}
+          {shipRoom === 7 && ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`]!=undefined &&(
+          <PilotRoom
+            x={shipRoomIndex * 64}
+            y={shipRoomY * 64}
+            health = {ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].health}
+          />
+          )}
 
 
           {ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`] != undefined && ship.roomDamage[`${shipRoomIndex+','+shipRoomY}`].onFire > 0&&(
@@ -234,6 +248,35 @@ function EngineRoom({x, y, health}){
   )
 }
 
+function PilotRoom({x, y, health}){
+  return(
+    <>
+    <BasicRoom
+    x={x}
+    y={y}
+   />
+   {health >= 100 && <Sprite
+      image={'/pilotIcon.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />}
+    {health < 100 && health >= 70 && <Sprite
+      image={'/pilotIconDamaged.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />}
+    {health < 70 && <Sprite
+      image={'/pilotIconBroken.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0, y: 0 }}
+    />}
+    </>
+  )
+}
+
 function BasicRoom({ x, y }) {
   return (
     <Sprite
@@ -366,7 +409,7 @@ function Camera() {
   useTick((delta) => {
     
       // Calculate the target timestamp (current time - desired delay)
-      const targetTimestamp = Date.now() - 100;
+      const targetTimestamp = Date.now() - 200;
 
       // Find the state from the history that is closest to the target timestamp
       let closestState = history[0];
