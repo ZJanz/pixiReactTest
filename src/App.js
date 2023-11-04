@@ -529,6 +529,7 @@ function Camera() {
       socket.off('serverMessage');
     };
   }, [socket]);
+  console.log(gameState)
   return (
     <>
       <GridBackground x={x} y={y} />

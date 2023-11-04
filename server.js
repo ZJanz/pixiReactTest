@@ -136,7 +136,7 @@ function startServer() {
   // gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0);
 
   let gameSpace = d3Quadtree.quadtree(gameState.shipArray, d => d.x, d => d.y);
-  gameSpace.addAll(gameState.bulletArray);
+  // gameSpace.addAll(gameState.bulletArray);
 
   function determineHitRoom(ship, bulletX, bulletY) {
     const rotation = ship.rotation;
@@ -181,7 +181,8 @@ function startServer() {
     gameSpace = d3Quadtree.quadtree(shipArray, d => d.x, d => d.y);
 
 
-    gameSpace.addAll(gameState.bulletArray);
+    // gameSpace.addAll(gameState.bulletArray);
+
 
 
 
@@ -345,11 +346,11 @@ function startServer() {
           do {
             const otherShip = node.data;
             const distance = Math.sqrt((otherShip.x - referenceX) ** 2 + (otherShip.y - referenceY) ** 2);
-            if (distance <= 2000) {
-              console.log(gameState.shipMap)
+            if (distance <= 1500) {
+              
               
               if (gameState.shipMap.hasOwnProperty(`${otherShip.shipId}`)) {
-                console.log(true)
+              
                 nearbyObjectMap[otherShip.shipId]=gameState.shipMap[otherShip.shipId];
               }
             }
@@ -359,7 +360,6 @@ function startServer() {
         return x1 > referenceX + 2000 || x2 < referenceX - 2000 || y1 > referenceY + 2000 || y2 < referenceY - 2000;
       });
 
-      console.log(nearbyObjectMap)
 
       // console.log(nearbyObjectMap)
 
@@ -376,7 +376,7 @@ function startServer() {
     }
 //////
     for (let i = gameState.bulletArray.length-1; i >= 0; i--) {
-      gameSpace.remove(gameState.bulletArray[i]);
+      // gameSpace.remove(gameState.bulletArray[i]);
       if(Date.now() - gameState.bulletArray[i].dateOfBirth > 1000){
         gameState.bulletArray.splice(i, 1)
         continue  
@@ -391,13 +391,13 @@ function startServer() {
             const otherShip = node.data;
             const distance = Math.sqrt((otherShip.x - gameState.bulletArray[i].x) ** 2 + (otherShip.y - gameState.bulletArray[i].y) ** 2);
             if (distance < 64*5/1.5+8 && otherShip !== gameState.bulletArray[i]) {
-              nearbyShips.push(otherShip);
+              nearbyShips.push(gameState.shipMap[otherShip.shipId]);
             }
           } while (node = node.next);
         }
         return x1 > gameState.bulletArray[i].x + 64*5/1.5+8 || x2 < gameState.bulletArray[i].x - 64*5/1.5+8 || y1 > gameState.bulletArray[i].y + 64*5/1.5+8 || y2 < gameState.bulletArray[i].y - 64*5/1.5+8;
       });
-
+      console.log(nearbyShips)
       nearbyShips.forEach(otherShip => {
         //element not in bullets to filter them
       
@@ -823,7 +823,7 @@ function startServer() {
       };
         gameState.bulletArray.push(newBullet)
         
-        gameSpace.add(newBullet); 
+        // gameSpace.add(newBullet); 
 
       }
          
