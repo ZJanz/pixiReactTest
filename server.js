@@ -643,10 +643,11 @@ function startServer() {
         dealDamage(i,randomPoint[0],randomPoint[1],20 )
         const index = gameState.asteroidArray.indexOf(nearbyAsteroid); 
         gameState.asteroidArray[index].hp -= 25
-        console.log(randomPointIn2DArray())
+        
         if(gameState.asteroidArray[index].hp<=0){
           gameState.asteroidArray.splice(index, 1)
-          
+          gameState.shipMap[i].inventory.nickle += Math.floor(Math.random() * 10)
+          console.log(gameState.shipMap[i].inventory)
         }
         asteroidSpace = d3Quadtree.quadtree(gameState.asteroidArray, d => d.x, d => d.y);
       }
@@ -825,7 +826,10 @@ function startServer() {
           x:3,
           y:2
         },
-        playersOnShip:[gameState.playerArray.length-1]
+        playersOnShip:[gameState.playerArray.length-1],
+        inventory: {
+          nickle:0
+        }
     }
     gameState.amountOfShips += 1;
     // gameState.shipMap.push({

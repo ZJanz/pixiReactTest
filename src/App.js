@@ -425,6 +425,12 @@ function Camera() {
   
   useEffect(() => {
     if(gameState.playerArray[indexInPlayerArray] === undefined){return}
+    console.log(gameState.playerArray[indexInPlayerArray].insideShip)
+    if(gameState.playerArray[indexInPlayerArray].insideShip === undefined){
+      setX(gameState.playerArray[indexInPlayerArray].spaceX - window.innerWidth/2)
+      setY(gameState.playerArray[indexInPlayerArray].spaceY - window.innerHeight/2)
+      return
+    }
     setX(gameState.shipMap[gameState.playerArray[indexInPlayerArray].insideShip].x - window.innerWidth/2)
     setY(gameState.shipMap[gameState.playerArray[indexInPlayerArray].insideShip].y- window.innerHeight/2)
   }, [gameState]);
@@ -486,6 +492,9 @@ function Camera() {
         case 'g':
           socket.emit('shoot', { key: 'g' });
           break;
+        case 'j':
+          socket.emit('eject', { key: 'j' });
+          break;
         // case 's':
         //   setSKey(true);
         //   socket.emit('movement', { key: 's' });
@@ -544,14 +553,14 @@ function Camera() {
 
   useEffect(() => {
     socket.on('serverMessage', (data) => {
-      console.log('Received message from the server:', data);
+      
     });
 
     return () => {
       socket.off('serverMessage');
     };
   }, [socket]);
-  console.log(gameState)
+  if(gameState.playerArray[indexInPlayerArray] === undefined){return}
   return (
     <>
       <GridBackground x={x} y={y} />
@@ -560,6 +569,14 @@ function Camera() {
       {renderAsteroids(gameState.asteroidArray, x, y)}
       {renderActualShips(gameState.playerArray, gameState.shipMap, x, y)}
       {renderBullets(gameState.bulletArray, x, y)}
+      <Text 
+    text={`Inventory: Nickle: ${gameState.shipMap[gameState.playerArray[indexInPlayerArray].insideShip].inventory.nickle}`}
+    anchor={0.5}
+    x={150}
+    y={150}
+    style={{
+      fill: 'white' // Use fill to set the text color
+  }} />
       
 
 
