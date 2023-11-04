@@ -126,7 +126,7 @@ function startServer() {
       const y = Math.random() * gameConfig.mapHeight; // Random Y position on map
       const size = Math.floor(Math.random() * (gameConfig.maxAsteroidSize - gameConfig.minAsteroidSize + 1)) + gameConfig.minAsteroidSize; // Random size within a range
 
-      gameState.asteroidArray.push(createAsteroid(x, y, size, 10));
+      gameState.asteroidArray.push(createAsteroid(x, y, size, 100));
     }
   }
 
@@ -553,19 +553,38 @@ function startServer() {
 
       // Perform collision logic...
 
-      // const nearbyShips = [];
-      // gameSpace.visit(function(node, x1, y1, x2, y2) {
-      //   if (!node.length) {
-      //     do {
-      //       const otherShip = node.data;
-      //       const distance = Math.sqrt((otherShip.x - gameState.shipMap[i].x) ** 2 + (otherShip.y - gameState.shipMap[i].y) ** 2);
-      //       if (distance < 64*5 && otherShip !== gameState.shipMap[i] && otherShip.type != 1) {
-      //         nearbyShips.push(otherShip);
-      //       }
-      //     } while (node = node.next);
-      //   }
-      //   return x1 > gameState.shipMap[i].x + 64*5 || x2 < gameState.shipMap[i].x - 64*5 || y1 > gameState.shipMap[i].y + 64*5 || y2 < gameState.shipMap[i].y - 64*5;
-      // });
+      let nearbyAsteroid = undefined;
+      asteroidSpace.visit(function(node, x1, y1, x2, y2) {
+        if (!node.length) {
+          do {
+            const asteroid = node.data;
+            const distance = Math.sqrt((asteroid.x - gameState.shipMap[i].x) ** 2 + (asteroid.y - gameState.shipMap[i].y) ** 2);
+            if (distance < 64 && asteroid !== gameState.shipMap[i] && asteroid.type != 1) {
+              nearbyAsteroid = asteroid;
+              
+
+            }
+          } while (node = node.next);
+        }
+        return x1 > gameState.shipMap[i].x + 64 || x2 < gameState.shipMap[i].x - 64 || y1 > gameState.shipMap[i].y + 64 || y2 < gameState.shipMap[i].y - 64;
+      });
+
+      if(nearbyAsteroid){
+        gameState.shipMap[i].velocityX = -gameState.shipMap[i].velocityX/2
+        gameState.shipMap[i].velocityY = -gameState.shipMap[i].velocityY/2
+        gameState.shipMap[i].x+=gameState.shipMap[i].velocityX*3
+        gameState.shipMap[i].y+=gameState.shipMap[i].velocityY*3
+        const randomPoint = randomPointIn2DArray() 
+        dealDamage(i,randomPoint[0],randomPoint[1],20 )
+        const index = gameState.asteroidArray.indexOf(nearbyAsteroid); 
+        gameState.asteroidArray[index].hp -= 25
+        console.log(randomPointIn2DArray())
+        if(gameState.asteroidArray[index].hp<=0){
+          gameState.asteroidArray.splice(index, 1)
+          
+        }
+        asteroidSpace = d3Quadtree.quadtree(gameState.asteroidArray, d => d.x, d => d.y);
+      }
 
       // nearbyShips.forEach(otherShip => {
       //   const distance = Math.sqrt((otherShip.x - gameState.shipMap[i].x) ** 2 + (otherShip.y - gameState.shipMap[i].y) ** 2);
@@ -583,6 +602,25 @@ function startServer() {
       
 
     }
+  }
+  function dealDamage(shipId, roomX, roomY, amount){
+    if(damageAbleRooms(gameState.shipMap[shipId].shipRooms[roomY][roomX])){
+      if(gameState.shipMap[shipId].roomDamage[`${roomX},${roomY}`] === undefined){
+        gameState.shipMap[shipId].roomDamage[`${roomX+','+roomY}`]={health:100, onFire : 0, x:roomX, y:roomY, roomType: gameState.shipMap[shipId].shipRooms[roomY][roomX]}
+      }
+      gameState.shipMap[shipId].roomDamage[`${roomX},${roomY}`].health -= amount
+      if(gameState.shipMap[shipId].roomDamage[`${roomX},${roomY}`].health <=0){
+        destroyRoom(roomX, roomY, shipId)
+      }
+    }
+  }
+
+  function randomPointIn2DArray() {
+    const rows = 5;
+    const cols = 5;
+    const randomRow = Math.floor(Math.random() * rows);
+    const randomCol = Math.floor(Math.random() * cols);
+    return [randomRow, randomCol];
   }
 
   function checkPlayerHealth(playerID){
