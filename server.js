@@ -99,7 +99,7 @@ function startServer() {
     //   rotation: 0
     // }
   ],
-  asteroids:[]
+  asteroidArray:[]
   };
   function createAsteroid(x, y, size) {
     return {
@@ -111,10 +111,10 @@ function startServer() {
   }
 
   gameConfig = {
-    mapWidth : 1000000,
-    mapHeight : 1000000,
+    mapWidth : 1000,
+    mapHeight : 1000,
 
-    numAsteroids : 10000, // Define the number of asteroids to spawn
+    numAsteroids : 10, // Define the number of asteroids to spawn
     minAsteroidSize : 20, // Define the minimum asteroid size
     maxAsteroidSize : 50, // Define the maximum asteroid size
   }
@@ -125,18 +125,19 @@ function startServer() {
       const y = Math.random() * gameConfig.mapHeight; // Random Y position on map
       const size = Math.floor(Math.random() * (gameConfig.maxAsteroidSize - gameConfig.minAsteroidSize + 1)) + gameConfig.minAsteroidSize; // Random size within a range
 
-      gameState.asteroids.push(createAsteroid(x, y, size));
+      gameState.asteroidArray.push(createAsteroid(x, y, size));
     }
   }
 
 
   // Call the spawnAsteroids function when starting the server
-  // spawnAsteroids();
+  spawnAsteroids();
 
   // gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0);
 
   let gameSpace = d3Quadtree.quadtree(gameState.shipArray, d => d.x, d => d.y);
   // gameSpace.addAll(gameState.bulletArray);
+  let asteroidSpace = d3Quadtree.quadtree(gameState.asteroidArray, d => d.x, d => d.y);
 
   function determineHitRoom(ship, bulletX, bulletY) {
     const rotation = ship.rotation;
@@ -368,7 +369,8 @@ function startServer() {
         playerArray: gameState.playerArray,
         shipMap: nearbyObjectMap,
         playerIDToIndex: gameState.playerIDToIndex,
-        bulletArray: gameState.bulletArray
+        bulletArray: gameState.bulletArray,
+        asteroidArray: gameState.asteroidArray
       };
       //Forgot to do this, Need to fix it somehow
       //playerArray[i].insideShip and shipMap decouple on the client side here

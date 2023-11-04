@@ -167,6 +167,14 @@ function renderBullets(bulletArray, cameraX, cameraY){
   );
 }
 
+function renderAsteroids(asteroidArray, cameraX, cameraY){
+  // console.log(shipArray)
+  return asteroidArray.map((asteroid, index) => (
+    <Asteroid key={index} x={asteroid.x - cameraX} y={asteroid.y -cameraY} asteroid={asteroid} />
+  )
+  );
+}
+
 function Bullet({x, y, rotation}){
   return(
   <Sprite
@@ -175,6 +183,18 @@ function Bullet({x, y, rotation}){
       y={y}
       anchor={{ x: 0.5, y: 0.5 }}
       rotation={rotation}
+      cullable={true}
+    />
+  )
+}
+
+function Asteroid({x, y, rotation}){
+  return(
+  <Sprite
+      image={'/asteroid.png'}
+      x={x}
+      y={y}
+      anchor={{ x: 0.5, y: 0.5 }}
       cullable={true}
     />
   )
@@ -377,7 +397,9 @@ function Camera() {
     t: Date.now(),
     playerArray: [],
     shipMap: {},
-    bulletArray: []
+    bulletArray: [],
+    asteroidArray: [],
+
   });
   const [serverState, setServerState] = useState(gameState)
   const [history, setHistory] = useState([gameState])
@@ -535,8 +557,10 @@ function Camera() {
       <GridBackground x={x} y={y} />
       
       {/* {renderShips(gameState.playerArray, gameState.playerArray, x, y)} */}
+      {renderAsteroids(gameState.asteroidArray, x, y)}
       {renderActualShips(gameState.playerArray, gameState.shipMap, x, y)}
       {renderBullets(gameState.bulletArray, x, y)}
+      
 
 
     </>
