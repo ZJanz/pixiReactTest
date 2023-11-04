@@ -101,11 +101,12 @@ function startServer() {
   ],
   asteroidArray:[]
   };
-  function createAsteroid(x, y, size) {
+  function createAsteroid(x, y, size, hp) {
     return {
       x,
       y,
       size,
+      hp
       // Add other properties as needed
     };
   }
@@ -125,7 +126,7 @@ function startServer() {
       const y = Math.random() * gameConfig.mapHeight; // Random Y position on map
       const size = Math.floor(Math.random() * (gameConfig.maxAsteroidSize - gameConfig.minAsteroidSize + 1)) + gameConfig.minAsteroidSize; // Random size within a range
 
-      gameState.asteroidArray.push(createAsteroid(x, y, size));
+      gameState.asteroidArray.push(createAsteroid(x, y, size, 10));
     }
   }
 
@@ -417,7 +418,35 @@ function startServer() {
         }
         return x1 > gameState.bulletArray[i].x + 64*5/1.5+8 || x2 < gameState.bulletArray[i].x - 64*5/1.5+8 || y1 > gameState.bulletArray[i].y + 64*5/1.5+8 || y2 < gameState.bulletArray[i].y - 64*5/1.5+8;
       });
-      console.log(nearbyShips)
+      const nearbyAsteroids = []
+      const bulletX = gameState.bulletArray[i].x
+      const bulletY = gameState.bulletArray[i].y
+      
+      asteroidSpace.visit(function(node, x1, y1, x2, y2) {
+        if (!node.length) {
+          do {
+            const asteroid = node.data;
+            const distance = Math.sqrt((asteroid.x - bulletX) ** 2 + (asteroid.y - bulletY) ** 2);
+            if (distance < 20 && asteroid !== gameState.bulletArray[i]) {
+              nearbyAsteroids.push(asteroid);
+
+              gameState.bulletArray.splice(i, 1)
+            }
+          } while (node = node.next);
+        }
+        return x1 > bulletX + 20 || x2 < bulletX - 20 || y1 > bulletY + 20 || y2 < bulletY - 20;
+      });
+
+      nearbyAsteroids.forEach(asteroid => {
+        const index = gameState.asteroidArray.indexOf(asteroid); 
+        gameState.asteroidArray[index].hp -= 10
+        if(gameState.asteroidArray[index].hp<=0){
+          gameState.asteroidArray.splice(index, 1)
+        }
+        asteroidSpace = d3Quadtree.quadtree(gameState.asteroidArray, d => d.x, d => d.y);
+      })
+
+
       nearbyShips.forEach(otherShip => {
         //element not in bullets to filter them
       
