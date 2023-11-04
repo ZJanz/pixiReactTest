@@ -358,8 +358,26 @@ function startServer() {
           } while (node = node.next);
         }
         // console.log(nearbyObjects)
-        return x1 > referenceX + 2000 || x2 < referenceX - 2000 || y1 > referenceY + 2000 || y2 < referenceY - 2000;
+        return x1 > referenceX + 1500 || x2 < referenceX - 1500 || y1 > referenceY + 1500 || y2 < referenceY - 1500;
       });
+
+      const nearbyAsteroidArray= []
+      asteroidSpace.visit(function (node, x1, y1, x2, y2) {
+        if (!node.length) {
+          do {
+            const otherAsteroid = node.data;
+            const distance = Math.sqrt((otherAsteroid.x - referenceX) ** 2 + (otherAsteroid.y - referenceY) ** 2);
+            if (distance <= 1500) {
+              
+              nearbyAsteroidArray.push(otherAsteroid)
+              
+            }
+          } while (node = node.next);
+        }
+        // console.log(nearbyObjects)
+        return x1 > referenceX + 1500 || x2 < referenceX - 1500 || y1 > referenceY + 1500 || y2 < referenceY - 1500;
+      });
+
 
 
       // console.log(nearbyObjectMap)
@@ -370,7 +388,7 @@ function startServer() {
         shipMap: nearbyObjectMap,
         playerIDToIndex: gameState.playerIDToIndex,
         bulletArray: gameState.bulletArray,
-        asteroidArray: gameState.asteroidArray
+        asteroidArray: nearbyAsteroidArray
       };
       //Forgot to do this, Need to fix it somehow
       //playerArray[i].insideShip and shipMap decouple on the client side here
