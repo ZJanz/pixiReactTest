@@ -140,7 +140,67 @@ function startServer() {
   // gameSpace.addAll(gameState.bulletArray);
   let asteroidSpace = d3Quadtree.quadtree(gameState.asteroidArray, d => d.x, d => d.y);
 
+
+  function boardShip(playerID){
+    
+    const shipMapPosition = gameState.playerArray[playerID].insideShip;
+    
+    const cosAngle = Math.cos(gameState.shipMap[shipMapPosition].rotation);
+    const sinAngle = Math.sin(gameState.shipMap[shipMapPosition].rotation);
+
+    const adjustedX =
+      gameState.shipMap[shipMapPosition].x +
+      (gameState.playerArray[playerID].x - 160) * cosAngle -
+      (gameState.playerArray[playerID].y - 160) * sinAngle;
+
+    const adjustedY =
+      gameState.shipMap[shipMapPosition].y +
+      (gameState.playerArray[playerID].x - 160) * sinAngle +
+      (gameState.playerArray[playerID].y - 160) * cosAngle;
+    console.log(adjustedX+','+adjustedY)
+
+    let nearbyShip;
+
+    gameSpace.visit(function (node, x1, y1, x2, y2) {
+      if (!node.length) {
+        do {
+          const otherShip = node.data;
+          const distance = Math.sqrt((otherShip.x - adjustedX) ** 2 + (otherShip.y - adjustedY) ** 2);
+          if (distance <= 200) {
+            
+            
+            if (otherShip.shipId != gameState.playerArray[playerID].insideShip) {
+            
+              nearbyShip=gameState.shipMap[otherShip.shipId];
+            }
+          }
+        } while (node = node.next);
+      }
+      // console.log(nearbyObjects)
+      return x1 > adjustedX + 200 || x2 < adjustedX - 200 || y1 > adjustedY + 200 || y2 < adjustedY - 200;
+    });
+
+    if(nearbyShip){
+      // console.log(nearbyShip)
+      const roomHit = determineHitRoom(nearbyShip, adjustedX, adjustedY)
+      if(roomHit.roomY>4||roomHit.roomY<0||roomHit.roomX>4||roomHit.roomX<0){return}
+      if(damageAbleRooms(nearbyShip.shipRooms[roomHit.roomY][roomHit.roomX])){
+        const shipPlayerIndex = gameState.shipMap[shipMapPosition].playersOnShip.indexOf(playerID)
+        gameState.shipMap[shipMapPosition].playersOnShip.splice(shipPlayerIndex, 1)
+        gameState.playerArray[playerID].insideShip=nearbyShip.id
+        gameState.shipMap[nearbyShip.id].playersOnShip.push(playerID)
+        gameState.playerArray[playerID].x = roomHit.roomX*64 + 32
+        gameState.playerArray[playerID].y = roomHit.roomY*64 + 32
+
+      }
+
+
+    }
+
+  }
+
   function determineHitRoom(ship, bulletX, bulletY) {
+    console.log(ship)
     const rotation = ship.rotation;
 
     // Adjust the bullet's position relative to the ship's position
@@ -189,7 +249,12 @@ function startServer() {
 
 
     for (let i = 0; i < gameState.playerArray.length; i++) {
+      
       let player = gameState.playerArray[i];
+      if(player.insideShip === undefined){
+        io.to(player.id).emit("gameState", gameState);
+        continue
+      }
       let ship = gameState.shipMap[player.insideShip];
 
 
@@ -697,6 +762,8 @@ function startServer() {
     gameState.playerArray.push({
       x: 64*5/2,
       y: 64*5/2,
+      spaceX : 0,
+      spaceY : 0,
       mode: 1,
       velocityX: 0,
       velocityY: 0,
@@ -860,6 +927,18 @@ function startServer() {
         return
       }
     })
+    socket.on('eject', (data) => {
+      const playerArrayPosition = gameState.playerIDToIndex.get(socket.id);
+      const shipMapPosition = gameState.playerArray[playerArrayPosition].insideShip;
+      boardShip(playerArrayPosition)
+      // if(gameState.playerArray[playerArrayPosition].mode === 0){
+        
+      //   gameState.playerArray[playerArrayPosition].spaceX=gameState.playerArray[playerArrayPosition].x + gameState.shipMap[shipMapPosition].x
+      //   gameState.playerArray[playerArrayPosition].spaceY=gameState.playerArray[playerArrayPosition].y + gameState.shipMap[shipMapPosition].y
+      //   gameState.playerArray[playerArrayPosition].insideShip = undefined
+      // }
+    })
+
     socket.on('shoot', (data) => {
       console.log("shoot")
       const playerArrayPosition = gameState.playerIDToIndex.get(socket.id);
