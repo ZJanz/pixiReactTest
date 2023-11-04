@@ -135,7 +135,7 @@ function startServer() {
 
   // gameState.playerIDToIndex.set(`${gameState.playerArray[0].id}`, 0);
 
-  let gameSpace = d3Quadtree.quadtree(gameState.shipMap, d => d.x, d => d.y);
+  let gameSpace = d3Quadtree.quadtree(gameState.shipArray, d => d.x, d => d.y);
   gameSpace.addAll(gameState.bulletArray);
 
   function determineHitRoom(ship, bulletX, bulletY) {
@@ -177,8 +177,9 @@ function startServer() {
     gameState.t = Date.now();
     const delta = (gameState.t - lastTimestamp) / 16;
     
+    const shipArray = Object.values(gameState.shipMap).map(ship => ({ x: ship.x, y: ship.y, shipId: ship.id }));
+    gameSpace = d3Quadtree.quadtree(shipArray, d => d.x, d => d.y);
 
-    gameSpace = d3Quadtree.quadtree(gameState.shipMap, d => d.x, d => d.y);
 
     gameSpace.addAll(gameState.bulletArray);
 
@@ -338,14 +339,19 @@ function startServer() {
       // Calculate position based on the ship the player is inside
       const referenceX = ship.x;
       const referenceY = ship.y;
-      const nearbyObjects = [];
+      const nearbyObjectMap = {};
       gameSpace.visit(function (node, x1, y1, x2, y2) {
         if (!node.length) {
           do {
             const otherShip = node.data;
             const distance = Math.sqrt((otherShip.x - referenceX) ** 2 + (otherShip.y - referenceY) ** 2);
             if (distance <= 2000) {
-              nearbyObjects.push(otherShip);
+              console.log(gameState.shipMap)
+              
+              if (gameState.shipMap.hasOwnProperty(`${otherShip.shipId}`)) {
+                console.log(true)
+                nearbyObjectMap[otherShip.shipId]=gameState.shipMap[otherShip.shipId];
+              }
             }
           } while (node = node.next);
         }
@@ -353,16 +359,20 @@ function startServer() {
         return x1 > referenceX + 2000 || x2 < referenceX - 2000 || y1 > referenceY + 2000 || y2 < referenceY - 2000;
       });
 
+      console.log(nearbyObjectMap)
+
+      // console.log(nearbyObjectMap)
+
       const gameStateForPlayer = {
         t: gameState.t,
-        playerArray: [gameState.playerArray],
-        shipMap: nearbyObjects,
+        playerArray: gameState.playerArray,
+        shipMap: nearbyObjectMap,
         playerIDToIndex: gameState.playerIDToIndex,
         bulletArray: gameState.bulletArray
       };
       //Forgot to do this, Need to fix it somehow
       //playerArray[i].insideShip and shipMap decouple on the client side here
-      io.to(player.id).emit("gameState", gameState);
+      io.to(player.id).emit("gameState", gameStateForPlayer);
     }
 //////
     for (let i = gameState.bulletArray.length-1; i >= 0; i--) {
@@ -454,7 +464,6 @@ function startServer() {
           const angleInRadians = gameState.shipMap[i].rotation;
           gameState.shipMap[i].velocityX += Math.cos(angleInRadians) * 1 * delta * gameState.shipMap[i].speed;
           gameState.shipMap[i].velocityY += Math.sin(angleInRadians) * 1 * delta * gameState.shipMap[i].speed;
-          console.log(gameState.shipMap[i].velocityY)
         }
       }
 
