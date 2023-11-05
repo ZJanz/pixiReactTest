@@ -112,10 +112,10 @@ function startServer() {
   }
 
   gameConfig = {
-    mapWidth : 1000,
-    mapHeight : 1000,
+    mapWidth : 100000,
+    mapHeight : 100000,
 
-    numAsteroids : 10, // Define the number of asteroids to spawn
+    numAsteroids : 100000, // Define the number of asteroids to spawn
     minAsteroidSize : 20, // Define the minimum asteroid size
     maxAsteroidSize : 50, // Define the maximum asteroid size
   }
@@ -782,6 +782,7 @@ function startServer() {
       insideRoomX:2,
       insideRoomY:2,
       
+      
     })
     
     gameState.shipMap[`${gameState.amountOfShips}`] = {
@@ -789,8 +790,8 @@ function startServer() {
         alive: true,
         controledBy: gameState.playerArray.length-1,
         rotation:0,
-        x: 0,
-        y: 0,
+        x: 50000,
+        y: 50000,
         velocityX:0,
         velocityY:0,
         moveForward: false,
@@ -829,7 +830,8 @@ function startServer() {
         playersOnShip:[gameState.playerArray.length-1],
         inventory: {
           nickle:0
-        }
+        },
+        lastShot: Date.now()
     }
     gameState.amountOfShips += 1;
     // gameState.shipMap.push({
@@ -947,9 +949,11 @@ function startServer() {
       console.log("shoot")
       const playerArrayPosition = gameState.playerIDToIndex.get(socket.id);
       const shipMapPosition = gameState.playerArray[playerArrayPosition].insideShip;
-      if(gameState.playerArray[playerArrayPosition].mode === 0){
+      console.log(Date.now()-gameState.shipMap[shipMapPosition].lastShot)
+      if(gameState.playerArray[playerArrayPosition].mode === 0||Date.now()-gameState.shipMap[shipMapPosition].lastShot< 300){
         return
       }
+      gameState.shipMap[shipMapPosition].lastShot = Date.now()
       if(gameState.playerArray[playerArrayPosition].mode === 1){
 
     
